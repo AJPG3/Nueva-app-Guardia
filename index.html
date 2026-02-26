@@ -75,6 +75,22 @@
             { id: 40, name: "Ortografía y Cultura", cat: "Cultura" }
         ];
 
+        const MUNICIPIOS_CADIZ = [
+            { id: "cad", name: "Cádiz Capital", tests: 4, official: true, color: "bg-blue-600" },
+            { id: "jer", name: "Jerez de la Frontera", tests: 3, official: true, color: "bg-red-700" },
+            { id: "alg", name: "Algeciras", tests: 2, official: true, color: "bg-green-700" },
+            { id: "sfe", name: "San Fernando", tests: 2, official: true, color: "bg-blue-400" },
+            { id: "pue", name: "El Puerto de Sta. María", tests: 3, official: true, color: "bg-orange-500" },
+            { id: "chi", name: "Chiclana de la Ftra.", tests: 2, official: true, color: "bg-indigo-600" }
+        ];
+
+        const PSICOTECNICOS = [
+            { id: "fig", name: "Series de Figuras", items: 25, cat: "Razonamiento" },
+            { id: "num", name: "Cálculo Numérico", items: 20, cat: "Aptitud" },
+            { id: "abs", name: "Razonamiento Abstracto", items: 30, cat: "Lógica" },
+            { id: "mem", name: "Memoria Visual", items: 15, cat: "Atención" },
+            { id: "ver", name: "Aptitud Verbal", items: 20, cat: "Idioma" }
+
         const App = () => {
             const [view, setView] = useState('home'); 
             const [activeTab, setActiveTab] = useState('temas');
