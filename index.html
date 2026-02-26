@@ -3,34 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GC MASTER ELITE - SISTEMA COMPLETO</title>
+    <title>POLICÍA LOCAL ANDALUCÍA - CÁDIZ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; overflow: hidden; background-color: #f8fafc; }
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap');
+        body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; overflow: hidden; background-color: #f1f5f9; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .active-scale:active { transform: scale(0.96); }
-        .glass-header { 
-            background: linear-gradient(135deg, #043d26 0%, #08633e 100%);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-        }
-        .main-scroll-area {
-            height: calc(100vh - 80px); 
-            overflow-y: auto;
-            padding-bottom: 160px;
-        }
-        .nav-active { color: #34d399 !important; }
-        .nav-active i { transform: translateY(-4px); }
-        .fire-gradient {
-            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-card { animation: fadeIn 0.4s ease-out forwards; }
+        .cadiz-header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); position: sticky; top: 0; z-index: 50; }
+        .main-scroll-area { height: calc(100vh - 80px); overflow-y: auto; padding-bottom: 160px; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-card { animation: slideUp 0.3s ease-out forwards; }
+        .border-gold { border-color: #fbbf24; }
+        .bg-cadiz { background-color: #0f172a; }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -43,31 +31,60 @@
         const apiKey = "AIzaSyBl1TDv5-OIBZGYLTCQ_v4g_oxkJPNs6eg"; 
         const modelId = "gemini-2.5-flash-preview-09-2025";
 
-        // Base de datos de reserva profesional (Simulada si la IA falla)
-        const MASTER_FALLBACK = [
-            { q: "¿Qué título de la Constitución Española trata de los Derechos y Deberes fundamentales?", options: ["Título Preliminar", "Título I", "Título II", "Título IV"], correct: 1, expl: "El Título I de la CE (arts. 10 a 55) recoge los Derechos y Deberes fundamentales." },
-            { q: "¿Quién ostenta el mando supremo de las Fuerzas Armadas?", options: ["El Presidente del Gobierno", "El Ministro de Defensa", "El Rey", "El Jefe del Estado Mayor"], correct: 2, expl: "Art. 62.h CE: Corresponde al Rey el mando supremo de las Fuerzas Armadas." },
-            { q: "La Guardia Civil depende del Ministerio del Interior en cuanto a:", options: ["Régimen de ascensos", "Retribuciones y acuartelamiento", "Servicios y misiones", "Misiones de carácter militar"], correct: 2, expl: "Depende de Interior para servicios y misiones, y de Defensa para régimen de ascensos y misiones militares." },
-            { q: "¿Cuál es el plazo máximo para interponer recurso de alzada?", options: ["15 días", "1 mes", "2 meses", "3 meses"], correct: 1, expl: "El plazo para interponer recurso de alzada es de un mes si el acto fuera expreso." },
-            { q: "¿En qué año se fundó la Guardia Civil?", options: ["1824", "1844", "1924", "1936"], correct: 1, expl: "La Guardia Civil fue fundada por el Duque de Ahumada en 1844." }
+        const TEMARIO_ANDALUCIA_40 = [
+            // PARTE COMÚN (DERECHO ESTATAL)
+            { id: 1, name: "La Constitución Española de 1978", cat: "Estado" },
+            { id: 2, name: "Derechos y Deberes Fundamentales", cat: "Estado" },
+            { id: 3, name: "El Tribunal Constitucional", cat: "Estado" },
+            { id: 4, name: "La Corona / Las Cortes Generales", cat: "Estado" },
+            { id: 5, name: "El Gobierno y la Administración", cat: "Estado" },
+            { id: 6, name: "Organización Territorial del Estado", cat: "Estado" },
+            { id: 7, name: "El Estatuto de Autonomía de Andalucía", cat: "Autonomía" },
+            { id: 8, name: "Instituciones de la Junta de Andalucía", cat: "Autonomía" },
+            { id: 9, name: "Derecho Administrativo General", cat: "Administración" },
+            { id: 10, name: "El Acto Administrativo / Procedimiento", cat: "Administración" },
+            { id: 11, name: "Régimen Local Español", cat: "Local" },
+            { id: 12, name: "El Municipio: Concepto y Elementos", cat: "Local" },
+            { id: 13, name: "Organización de los Municipios", cat: "Local" },
+            { id: 14, name: "Competencias Municipales", cat: "Local" },
+            { id: 15, name: "Haciendas Locales", cat: "Local" },
+            { id: 16, name: "Función Pública Local", cat: "Local" },
+            { id: 17, name: "La Policía Local: Concepto y Funciones", cat: "Policía" },
+            { id: 18, name: "Ley 5/2023 de Policías Locales de Andalucía", cat: "Policía" },
+            { id: 19, name: "Derechos y Deberes del Funcionario P.L.", cat: "Policía" },
+            { id: 20, name: "Régimen Disciplinario P.L. Andalucía", cat: "Policía" },
+            { id: 21, name: "Fuerzas y Cuerpos de Seguridad (LO 2/86)", cat: "Policía" },
+            { id: 22, name: "Delitos y Faltas (Código Penal)", cat: "Penal" },
+            { id: 23, name: "Delitos contra la Seguridad Vial", cat: "Penal" },
+            { id: 24, name: "Derecho Procesal Penal / Detención", cat: "Penal" },
+            { id: 25, name: "Policía Judicial y sus Funciones", cat: "Policía" },
+            { id: 26, name: "Ley de Seguridad Ciudadana (LO 4/2015)", cat: "Estado" },
+            { id: 27, name: "Tráfico: Ley de Seguridad Vial", cat: "Tráfico" },
+            { id: 28, name: "Reglamento General de Circulación", cat: "Tráfico" },
+            { id: 29, name: "Reglamento General de Vehículos", cat: "Tráfico" },
+            { id: 30, name: "Transportes y Cargas", cat: "Tráfico" },
+            { id: 31, name: "Seguridad Vial y Accidentología", cat: "Tráfico" },
+            { id: 32, name: "Espectáculos Públicos en Andalucía", cat: "Específico" },
+            { id: 33, name: "Medio Ambiente y Ruidos", cat: "Específico" },
+            { id: 34, name: "Venta Ambulante / Consumo", cat: "Específico" },
+            { id: 35, name: "Urbanismo y Ordenanzas Municipales", cat: "Específico" },
+            { id: 36, name: "Protección Civil y Emergencias", cat: "Específico" },
+            { id: 37, name: "Igualdad y Violencia de Género", cat: "Estado" },
+            { id: 38, name: "Ética y Deontología Profesional", cat: "Policía" },
+            { id: 39, name: "Psicotécnicos y Ómnibus", cat: "Psico" },
+            { id: 40, name: "Ortografía, Gramática e Inglés", cat: "Cultura" }
         ];
 
-        const TEMAS = [
-            "Derechos Humanos", "Igualdad", "Prevención Riesgos", "Constitucional", "Derecho UE",
-            "Inst. Internacionales", "Derecho Civil", "Derecho Penal", "Procesal Penal", "Derecho Administrativo",
-            "Protección Datos", "Extranjería", "Seguridad Pública", "Interior y Defensa", "FCS",
-            "Guardia Civil", "Protección Civil", "Tecnologías", "Topografía", "Deontología",
-            "Menores", "Armas y Explosivos", "Terrorismo", "Inglés", "Ortografía y Gramática"
-        ].map((name, i) => ({ id: i + 1, name }));
-
-        const PREGUNTAS_CALIENTES = [
-            "Leyes Orgánicas vs Ordinarias", "Plazos de Detención", "Competencias de la GC en el mar", "Tratado de Lisboa", "Estructura del Ministerio del Interior", "Código de Conducta de los funcionarios"
+        const EXAMENES_OFICIALES = [
+            { id: 'c24', name: "Cádiz Capital 2024", year: 2024 },
+            { id: 'j23', name: "Jerez de la Frontera 2023", year: 2023 },
+            { id: 'p24', name: "El Puerto Sta María 2024", year: 2024 },
+            { id: 'ch23', name: "Chiclana 2023", year: 2023 }
         ];
 
         const App = () => {
             const [view, setView] = useState('home');
             const [activeTab, setActiveTab] = useState('temas');
-            const [nav, setNav] = useState('home');
             const [loading, setLoading] = useState(false);
             const [failedQuestions, setFailedQuestions] = useState([]);
             const [numQ, setNumQ] = useState(20);
@@ -75,6 +92,189 @@
             const [test, setTest] = useState({ questions: [], current: 0, answers: {}, source: '' });
             const [showExitConfirm, setShowExitConfirm] = useState(false);
 
+            useEffect(() => {
+                const stored = localStorage.getItem('andalucia_failed_questions');
+                if (stored) setFailedQuestions(JSON.parse(stored));
+            }, []);
+
+            const saveFailed = (q) => {
+                const exists = failedQuestions.find(item => item.q === q.q);
+                if (!exists) {
+                    const newPool = [...failedQuestions, q];
+                    setFailedQuestions(newPool);
+                    localStorage.setItem('andalucia_failed_questions', JSON.stringify(newPool));
+                }
+            };
+
+            const removeFailed = (qText) => {
+                const newPool = failedQuestions.filter(q => q.q !== qText);
+                setFailedQuestions(newPool);
+                localStorage.setItem('andalucia_failed_questions', JSON.stringify(newPool));
+            };
+
+            const startIATest = async (target, isOfficial = false) => {
+                setLoading(true);
+                const name = typeof target === 'string' ? target : target.name;
+                const prompt = isOfficial 
+                    ? `Genera un examen oficial REAL de Policía Local de ${name}. Mantén el orden y las 100 preguntas típicas. JSON: { "questions": [{ "q": "", "options": ["","","",""], "correct": 0, "expl": "" }] }`
+                    : `Actúa como tribunal de oposiciones de Policía Local de Andalucía. Genera ${numQ} preguntas sobre "${name}". Usa la Ley 5/2023 de Andalucía si aplica. JSON: { "questions": [{ "q": "", "options": ["","","",""], "correct": 0, "expl": "" }] }`;
+                
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ 
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { responseMimeType: "application/json" }
+                        })
+                    });
+                    const data = await response.json();
+                    const json = JSON.parse(data.candidates[0].content.parts[0].text);
+                    setTest({ questions: json.questions, current: 0, answers: {}, source: name });
+                    setView('quiz');
+                } catch (e) {
+                    alert("Error en la conexión con la academia virtual.");
+                }
+                setLoading(false);
+            };
+
+            const handleAnswer = (idx) => {
+                if (test.answers[test.current] !== undefined) return;
+                const correct = test.questions[test.current].correct;
+                if (idx !== -1 && idx !== correct) saveFailed(test.questions[test.current]);
+                setTest(t => ({ ...t, answers: { ...t.answers, [t.current]: idx } }));
+            };
+
+            if (loading) return (
+                <div className="h-screen bg-[#0f172a] flex flex-col items-center justify-center text-white">
+                    <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.5em] animate-pulse">Cargando batería de Cádiz...</p>
+                </div>
+            );
+
+            return (
+                <div className="max-w-md mx-auto bg-slate-50 h-screen flex flex-col shadow-2xl overflow-hidden relative">
+                    
+                    {showExitConfirm && (
+                        <div className="fixed inset-0 z-[200] bg-slate-900/95 backdrop-blur-md flex items-center justify-center p-6">
+                            <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-xs text-center border-t-8 border-blue-900">
+                                <h3 className="text-xl font-black uppercase mb-2 text-slate-800">¿Retirada?</h3>
+                                <p className="text-[10px] text-slate-400 mb-8 font-bold uppercase tracking-widest leading-loose">Tu progreso y errores se guardarán para el próximo turno.</p>
+                                <div className="space-y-3">
+                                    <button onClick={() => { setShowExitConfirm(false); setView('results'); }} className="w-full bg-blue-900 text-white py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest">Finalizar y Corregir</button>
+                                    <button onClick={() => setShowExitConfirm(false)} className="w-full bg-slate-100 text-slate-500 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest">Continuar</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <header className="cadiz-header px-6 pt-14 pb-6 rounded-b-[3.5rem] shadow-2xl shrink-0">
+                        <div className="flex justify-between items-center mb-6">
+                            <h1 className="text-xl font-black italic text-white tracking-tighter">ANDALUCÍA <span className="text-blue-500">PRO</span></h1>
+                            <div className="bg-white/10 px-3 py-1.5 rounded-full border border-white/10">
+                                <span className="text-[8px] font-black text-blue-400 uppercase tracking-[0.2em]">Cádiz Edition</span>
+                            </div>
+                        </div>
+
+                        {view === 'home' && (
+                            <div className="flex bg-black/40 p-1.5 rounded-2xl overflow-x-auto no-scrollbar">
+                                {[
+                                    { id: 'temas', label: 'Temas 1-40' },
+                                    { id: 'oficiales', label: 'Oficiales' },
+                                    { id: 'failed', label: 'Batería Errores' }
+                                ].map(tab => (
+                                    <button 
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`flex-none px-5 py-2.5 text-[9px] font-black uppercase rounded-xl transition-all mr-1 ${activeTab === tab.id ? 'bg-blue-600 text-white shadow-xl' : 'text-white/30'}`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </header>
+
+                    <main className="main-scroll-area px-6 pt-6 no-scrollbar">
+                        {view === 'home' && (
+                            <div className="space-y-4 pb-20">
+                                {activeTab === 'temas' && (
+                                    <div className="space-y-3">
+                                        {TEMARIO_ANDALUCIA_40.map(t => (
+                                            <div key={t.id} onClick={() => { setSelectedTarget(t); setView('config'); }} className="bg-white p-5 rounded-[2rem] border border-slate-200 flex items-center gap-4 active-scale animate-card shadow-sm">
+                                                <div className="w-10 h-10 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-800 font-black text-[10px]">{t.id}</div>
+                                                <div className="flex-1">
+                                                    <h4 className="font-bold text-slate-800 text-[13px] tracking-tight leading-tight">{t.name}</h4>
+                                                    <span className="text-[8px] font-black uppercase text-blue-500 tracking-widest">{t.cat}</span>
+                                                </div>
+                                                <i className="fa-solid fa-bolt text-blue-100 text-[10px]"></i>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {activeTab === 'oficiales' && (
+                                    <div className="space-y-4">
+                                        <div className="bg-blue-900 p-6 rounded-[2.5rem] text-white shadow-xl mb-6 relative overflow-hidden">
+                                            <i className="fa-solid fa-anchor absolute -right-4 -bottom-4 text-7xl opacity-10"></i>
+                                            <h3 className="font-black italic uppercase text-lg">Exámenes Cádiz</h3>
+                                            <p className="text-[10px] font-bold opacity-60 uppercase tracking-widest">Preguntas reales de convocatorias del entorno.</p>
+                                        </div>
+                                        {EXAMENES_OFICIALES.map(ex => (
+                                            <div key={ex.id} onClick={() => startIATest(ex, true)} className="bg-white p-6 rounded-[2rem] border border-slate-100 flex justify-between items-center active-scale shadow-sm animate-card">
+                                                <div>
+                                                    <h4 className="font-black text-slate-800 text-sm uppercase">{ex.name}</h4>
+                                                    <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-[0.2em]">Convocatoria {ex.year}</p>
+                                                </div>
+                                                <i className="fa-solid fa-file-invoice text-blue-900/10 text-3xl"></i>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {activeTab === 'failed' && (
+                                    <div className="space-y-4">
+                                        <div className="text-center py-6">
+                                            <h3 className="text-xl font-black text-slate-800 mb-2 uppercase italic">Batería de Fallos</h3>
+                                            <p className="text-slate-400 text-[10px] mb-8 font-black uppercase tracking-[0.2em]">{failedQuestions.length} Preguntas por limpiar</p>
+                                            {failedQuestions.length > 0 && (
+                                                <button onClick={() => { setTest({ questions: failedQuestions, current: 0, answers: {}, source: 'Entrenamiento de Fallos' }); setView('quiz'); }} className="w-full bg-red-600 text-white py-5 rounded-[2.5rem] font-black uppercase text-[10px] tracking-widest shadow-xl shadow-red-100">Iniciar Repaso</button>
+                                            )}
+                                        </div>
+                                        {failedQuestions.map((q, idx) => (
+                                            <div key={idx} className="bg-white p-6 rounded-[2rem] border border-red-100 flex flex-col gap-3 shadow-sm animate-card">
+                                                <p className="text-[12px] font-bold text-slate-700 leading-relaxed">{q.q}</p>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-[8px] font-black text-red-400 uppercase tracking-widest px-3 py-1 bg-red-50 rounded-lg">Fallo Crítico</span>
+                                                    <button onClick={() => removeFailed(q.q)} className="text-[9px] font-black text-slate-300 uppercase hover:text-green-500 transition-colors">
+                                                        <i className="fa-solid fa-check mr-1"></i> Borrar del Banco
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {view === 'config' && (
+                            <div className="bg-white p-10 rounded-[3.5rem] shadow-2xl border border-slate-50 animate-card text-center">
+                                <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-900 text-3xl">
+                                    <i className="fa-solid fa-gavel"></i>
+                                </div>
+                                <h3 className="text-2xl font-black text-slate-800 mb-2 uppercase italic tracking-tighter leading-tight">{selectedTarget?.name}</h3>
+                                <p className="text-slate-300 text-[9px] font-black uppercase tracking-widest mb-10">Andalucía / Cádiz Edition</p>
+                                <div className="flex gap-2 mb-10">
+                                    {[10, 25, 50, 100].map(n => (
+                                        <button key={n} onClick={() => setNumQ(n)} className={`flex-1 py-5 rounded-[1.5rem] font-black text-sm transition-all ${numQ === n ? 'bg-blue-900 text-white shadow-xl' : 'bg-slate-50 text-slate-400 active-scale'}`}>{n}</button>
+                                    ))}
+                                </div>
+                                <button onClick={() => startIATest(selectedTarget)} className="w-full bg-blue-600 text-white py-6 rounded-[2.5rem] font-black active-scale shadow-xl uppercase tracking-widest text-[10px] mb-4">Generar Cuestionario</button>
+                                <button onClick={() => setView('home')} className="w-full py-4 text-[9px] font-black text-slate-300 uppercase tracking-widest">Volver</button>
+                            </div>
+                        )}
+
+                        {vi
             const fetchQuestions = async (prompt) => {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
                 let retries = 5;
@@ -446,3 +646,4 @@
     </script>
 </body>
 </html>
+
