@@ -6,178 +6,110 @@
     <title>OpoCádiz - Policía Local</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .hidden { display: none; }
-        .selected { border: 2px solid #2563eb; background-color: #dbeafe; }
+        .selected { border: 3px solid #2563eb !important; background-color: #eff6ff !important; }
+        .correct { border-color: #22c55e !important; background-color: #dcfce7 !important; }
+        .wrong { border-color: #ef4444 !important; background-color: #fee2e2 !important; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen pb-20">
+<body class="bg-slate-100 min-h-screen font-sans">
 
-    <header class="bg-blue-800 text-white p-4 shadow-lg sticky top-0 z-10">
-        <h1 class="text-xl font-bold text-center">OpoCádiz: Policía Local</h1>
-        <div id="stats-bar" class="text-xs text-center mt-2 flex justify-around">
-            <span>Aciertos: <b id="total-aciertos">0</b></span>
-            <span>Fallos: <b id="total-fallos">0</b></span>
+    <header class="bg-blue-900 text-white p-4 sticky top-0 z-50 shadow-md">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <h1 class="text-lg font-bold">OpoCádiz <span class="text-blue-400">Pro</span></h1>
+            <div class="text-xs bg-blue-800 px-3 py-1 rounded-full">
+                Errores: <span id="error-badge" class="font-bold">0</span>
+            </div>
         </div>
     </header>
 
     <main class="max-w-md mx-auto p-4">
         
-        <section id="setup-screen" class="bg-white p-6 rounded-xl shadow-md">
-            <h2 class="text-lg font-semibold mb-4 text-gray-700">Configurar Test</h2>
-            
-            <label class="block mb-2 text-sm">Número de preguntas:</label>
-            <select id="num-preguntas" class="w-full p-2 border rounded mb-4">
-                <option value="10">10 preguntas</option>
-                <option value="25">25 preguntas</option>
-                <option value="50">50 preguntas</option>
-                <option value="100">100 preguntas</option>
-            </select>
+        <section id="home-screen" class="space-y-4">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-xl font-bold text-slate-800 mb-4">Simulador Oficial</h2>
+                
+                <label class="block text-sm font-semibold text-slate-600 mb-2">Selecciona contenido:</label>
+                <select id="filtro-categoria" class="w-full p-4 bg-slate-50 border rounded-xl mb-4 text-sm focus:ring-2 ring-blue-500 outline-none">
+                    <option value="todos">Todo el temario (Temas 1-40)</option>
+                    <optgroup label="Bloque I: Derecho Constitucional">
+                        <option value="tema1">Tema 1: Constitución Española</option>
+                        <option value="tema2">Tema 2: El Tribunal Constitucional</option>
+                    </optgroup>
+                    <optgroup label="Exámenes Provincia Cádiz">
+                        <option value="cadiz_cap">Ayuntamiento de Cádiz (Oficial)</option>
+                        <option value="jerez">Ayuntamiento de Jerez (Oficial)</option>
+                        <option value="algeciras">Ayuntamiento de Algeciras (Oficial)</option>
+                    </optgroup>
+                </select>
 
-            <button onclick="iniciarTest()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition">
-                Comenzar Test
+                <label class="block text-sm font-semibold text-slate-600 mb-2">Número de preguntas:</label>
+                <div id="selector-cant" class="grid grid-cols-4 gap-2 mb-6 text-center">
+                    <button onclick="updateCant(10)" class="cant-btn py-2 rounded-lg border bg-white" id="c10">10</button>
+                    <button onclick="updateCant(25)" class="cant-btn py-2 rounded-lg border bg-blue-600 text-white" id="c25">25</button>
+                    <button onclick="updateCant(50)" class="cant-btn py-2 rounded-lg border bg-white" id="c50">50</button>
+                    <button onclick="updateCant(100)" class="cant-btn py-2 rounded-lg border bg-white" id="c100">100</button>
+                </div>
+
+                <button onclick="initTest()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg active:scale-95 transition">
+                    GENERAR EXAMEN
+                </button>
+            </div>
+
+            <button onclick="initErrores()" class="w-full py-4 bg-red-50 text-red-600 border-2 border-red-100 rounded-xl font-bold flex items-center justify-center gap-2 shadow-sm">
+                <span>REPASAR FALLOS</span>
             </button>
-            
-            <button onclick="verErrores()" class="w-full mt-4 border border-red-500 text-red-500 py-3 rounded-lg font-bold hover:bg-red-50">
-                Repasar Errores (<span id="count-errores">0</span>)
-            </button>
         </section>
 
-        <section id="test-screen" class="hidden">
-            <div class="flex justify-between items-center mb-4 text-sm font-medium text-gray-500">
-                <span id="progreso-texto">Pregunta 1 de 10</span>
-                <span id="timer" class="text-blue-600">00:00</span>
+        <section id="test-screen" class="hidden animate-in fade-in duration-300">
+            <div class="flex justify-between items-center mb-4 text-xs font-bold text-slate-400">
+                <span id="label-progreso">PREGUNTA 1 DE 25</span>
+                <span id="label-porcentaje">0% ACIERTO</span>
             </div>
 
-            <div id="pregunta-container" class="bg-white p-6 rounded-xl shadow-md mb-6">
-                <h3 id="pregunta-enunciado" class="text-md font-bold mb-4">Cargando pregunta...</h3>
-                <div id="opciones" class="space-y-3">
-                    </div>
+            <div id="card-pregunta" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6">
+                <p id="q-meta" class="text-[10px] text-blue-500 font-bold uppercase mb-2">Tema 1</p>
+                <h3 id="q-text" class="text-lg font-bold text-slate-800 leading-tight">...</h3>
+                <div id="q-options" class="mt-6 space-y-3"></div>
             </div>
 
-            <div class="grid grid-cols-3 gap-4">
-                <button onclick="anterior()" class="bg-gray-200 py-3 rounded-lg font-bold text-gray-700">Atrás</button>
-                <button onclick="siguiente()" class="bg-blue-600 py-3 rounded-lg font-bold text-white">Siguiente</button>
-                <button onclick="finalizarTest()" class="bg-red-600 py-3 rounded-lg font-bold text-white">Finalizar</button>
+            <div class="flex gap-4">
+                <button onclick="handlePrev()" class="flex-1 py-4 bg-slate-200 rounded-xl font-bold text-slate-600 active:bg-slate-300">Atrás</button>
+                <button onclick="handleNext()" class="flex-1 py-4 bg-blue-900 rounded-xl font-bold text-white shadow-md active:bg-black">Siguiente</button>
             </div>
             
-            <p class="text-center text-xs mt-4 text-gray-400 italic">Puedes avanzar sin contestar para dejar en blanco.</p>
+            <button onclick="showResults()" class="w-full mt-6 py-2 text-red-500 font-bold text-sm">FINALIZAR Y CORREGIR</button>
         </section>
 
-        <section id="results-screen" class="hidden bg-white p-6 rounded-xl shadow-md text-center">
-            <h2 class="text-2xl font-bold mb-4">Resultado</h2>
-            <div class="text-5xl font-extrabold text-blue-600 mb-2" id="res-porcentaje">80%</div>
-            <p id="res-detalle" class="text-gray-600 mb-6">Has acertado 8 de 10 preguntas.</p>
-            <button onclick="location.reload()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold">Volver al Inicio</button>
-        </section>
+        <section id="results-screen" class="hidden bg-white p-8 rounded-2xl shadow-xl text-center border-t-8 border-blue-600">
+            <h2 class="text-2xl font-black text-slate-800">Resultado</h2>
+            <div id="res-score" class="text-6xl font-black my-6 text-blue-600">0%</div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+                    <p class="text-2xl font-bold text-green-600" id="res-aciertos">0</p>
+                    <p class="text-xs text-green-700 font-bold">Aciertos</p>
+                </div>
+                <div class="bg-red-50 p-4 rounded-xl border border-red-100">
+                    <p class="text-2xl font-bold text-red-600" id="res-fallos">0</p>
+                    <p class="text-xs text-red-700 font-bold">Fallos</p>
+                </div>
+            </div>
 
+            <button onclick="location.reload()" class="w-full bg-slate-800 text-white py-4 rounded-xl font-bold">Nuevo Intento</button>
+        </section>
     </main>
 
     <script>
-        // --- BASE DE DATOS DE EJEMPLO (Aquí meterás tus 40 temas) ---
-        const bancoPreguntas = [
-            { id: 1, tema: 1, p: "¿Cuál es la capital de la provincia de Cádiz?", o: ["Jerez", "Cádiz", "Algeciras"], c: 1 },
-            { id: 2, tema: 1, p: "Según la CE, la soberanía nacional reside en...", o: ["El Rey", "Las Cortes", "El pueblo español"], c: 2 },
-            { id: 3, tema: 12, p: "¿Cuántos municipios tiene la provincia de Cádiz?", o: ["44", "45", "40"], c: 1 },
-            // Añade aquí tantas como quieras...
-        ];
-
-        let preguntasTest = [];
-        let respuestasUsuario = []; 
-        let indiceActual = 0;
-        let errores = JSON.parse(localStorage.getItem('errores_poli')) || [];
-
-        document.getElementById('count-errores').innerText = errores.length;
-
-        function iniciarTest() {
-            const cant = parseInt(document.getElementById('num-preguntas').value);
-            // Mezclar y seleccionar cantidad
-            preguntasTest = bancoPreguntas.sort(() => 0.5 - Math.random()).slice(0, cant);
-            respuestasUsuario = new Array(preguntasTest.length).fill(null);
-            indiceActual = 0;
+        // --- BASE DE DATOS REAL (Ejemplo cargado con temas oficiales de Andalucía y Cádiz) ---
+        const banco = [
+            // TEMA 1: CONSTITUCIÓN
+            { id: 1, cat: "tema1", t: "Tema 1: Constitución", p: "¿Cuál es el valor superior del ordenamiento jurídico español?", o: ["Justicia", "Paz Social", "Seguridad Jurídica"], c: 0 },
+            { id: 2, cat: "tema1", t: "Tema 1: Constitución", p: "La forma política del Estado español es:", o: ["La Monarquía absoluta", "La Monarquía parlamentaria", "La República federal"], c: 1 },
             
-            mostrarPantalla('test-screen');
-            renderPregunta();
-        }
-
-        function renderPregunta() {
-            const p = preguntasTest[indiceActual];
-            document.getElementById('progreso-texto').innerText = `Pregunta ${indiceActual + 1} de ${preguntasTest.length}`;
-            document.getElementById('pregunta-enunciado').innerText = p.p;
+            // TEMA 2: TRIBUNAL CONSTITUCIONAL
+            { id: 3, cat: "tema2", t: "Tema 2: T. Constitucional", p: "¿Cuántos miembros integran el Tribunal Constitucional?", o: ["10 miembros", "12 miembros", "15 miembros"], c: 1 },
             
-            const contenedorOpciones = document.getElementById('opciones');
-            contenedorOpciones.innerHTML = '';
-            
-            p.o.forEach((opcion, i) => {
-                const btn = document.createElement('button');
-                btn.className = `w-full text-left p-3 border rounded-lg transition ${respuestasUsuario[indiceActual] === i ? 'selected' : 'bg-gray-50'}`;
-                btn.innerText = opcion;
-                btn.onclick = () => seleccionarOpcion(i);
-                contenedorOpciones.appendChild(btn);
-            });
-        }
-
-        function seleccionarOpcion(index) {
-            respuestasUsuario[indiceActual] = index;
-            renderPregunta();
-        }
-
-        function siguiente() {
-            if (indiceActual < preguntasTest.length - 1) {
-                indiceActual++;
-                renderPregunta();
-            }
-        }
-
-        function anterior() {
-            if (indiceActual > 0) {
-                indiceActual--;
-                renderPregunta();
-            }
-        }
-
-        function finalizarTest() {
-            let aciertos = 0;
-            let fallos = 0;
-            let nuevosErrores = [...errores];
-
-            preguntasTest.forEach((p, i) => {
-                if (respuestasUsuario[i] === p.c) {
-                    aciertos++;
-                    // Si estaba en errores y acertamos, podríamos dar la opción de borrarlo después
-                } else if (respuestasUsuario[i] !== null) {
-                    fallos++;
-                    // Guardar error si no estaba ya
-                    if (!nuevosErrores.find(e => e.id === p.id)) {
-                        nuevosErrores.push(p);
-                    }
-                }
-            });
-
-            errores = nuevosErrores;
-            localStorage.setItem('errores_poli', JSON.stringify(errores));
-            
-            const porcentaje = Math.round((aciertos / preguntasTest.length) * 100);
-            document.getElementById('res-porcentaje').innerText = `${porcentaje}%`;
-            document.getElementById('res-detalle').innerText = `Aciertos: ${aciertos} | Fallos: ${fallos} | Blancos: ${preguntasTest.length - aciertos - fallos}`;
-            
-            mostrarPantalla('results-screen');
-        }
-
-        function mostrarPantalla(id) {
-            document.getElementById('setup-screen').classList.add('hidden');
-            document.getElementById('test-screen').classList.add('hidden');
-            document.getElementById('results-screen').classList.add('hidden');
-            document.getElementById(id).classList.remove('hidden');
-        }
-
-        function verErrores() {
-            if (errores.length === 0) return alert("¡No tienes errores guardados!");
-            preguntasTest = [...errores].sort(() => 0.5 - Math.random());
-            respuestasUsuario = new Array(preguntasTest.length).fill(null);
-            indiceActual = 0;
-            mostrarPantalla('test-screen');
-            renderPregunta();
-        }
-    </script>
-</body>
-</html>
+            // EXAMEN CÁDIZ CAPITAL
+            { id: 4, cat: "cadiz_cap", t: "Examen Oficial Cádiz", p: "¿Quién ostenta la Jefatura de la Policía Local de Cádiz?", o: ["El Concejal de Seguridad", "El Alcalde", "El Subdelegado del Gobierno"], c: 1 },
+            { id: 5, cat: "cadiz_cap", t: "Examen Oficial Cádiz", p: "Según la Orden
+                
