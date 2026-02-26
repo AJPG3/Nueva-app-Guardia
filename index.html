@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POLICÍA LOCAL ANDALUCÍA - CÁDIZ</title>
-    <!-- Cargamos librerías externas con protocolos seguros -->
+    <title>MASTER POLICÍA LOCAL ANDALUCÍA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -14,12 +13,12 @@
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap');
         body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .active-scale:active { transform: scale(0.95); }
-        .gradient-blue { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); }
-        .app-height { height: 100vh; height: -webkit-fill-available; }
-        .scroll-area { flex: 1; overflow-y: auto; padding-bottom: 120px; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-card { animation: fadeIn 0.4s ease-out forwards; }
+        .active-scale:active { transform: scale(0.96); }
+        .gradient-cadiz { background: linear-gradient(135deg, #004481 0%, #002d56 100%); }
+        .gradient-gold { background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%); }
+        .gradient-psycho { background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-up { animation: slideUp 0.3s ease-out forwards; }
     </style>
 </head>
 <body>
@@ -28,312 +27,281 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // Configuración de API (Opcional)
-        const apiKey = "AIzaSyBl1TDv5-OIBZGYLTCQ_v4g_oxkJPNs6eg"; 
-        const modelId = "gemini-2.5-flash-preview-09-2025";
-
-        const TEMARIO = [
-            { id: 1, name: "La Constitución Española", cat: "Estado" },
+        // BASE DE DATOS COMPLETA 40 TEMAS
+        const TEMARIO_OFICIAL = [
+            { id: 1, name: "La Constitución Española de 1978: Valores y Principios", cat: "Estado" },
             { id: 2, name: "Derechos y Deberes Fundamentales", cat: "Estado" },
-            { id: 3, name: "Tribunal Constitucional", cat: "Estado" },
-            { id: 4, name: "La Corona y Cortes Generales", cat: "Estado" },
-            { id: 5, name: "El Gobierno y Administración", cat: "Estado" },
-            { id: 6, name: "Organización Territorial", cat: "Estado" },
-            { id: 7, name: "Estatuto de Andalucía", cat: "Andalucía" },
-            { id: 8, name: "Instituciones de la Junta", cat: "Andalucía" },
-            { id: 9, name: "Derecho Administrativo", cat: "Admin" },
-            { id: 10, name: "Acto Administrativo", cat: "Admin" },
-            { id: 11, name: "Régimen Local", cat: "Local" },
-            { id: 12, name: "Municipio: Concepto", cat: "Local" },
-            { id: 13, name: "Organización Municipal", cat: "Local" },
-            { id: 14, name: "Competencias Municipales", cat: "Local" },
-            { id: 15, name: "Haciendas Locales", cat: "Local" },
-            { id: 16, name: "Función Pública Local", cat: "Local" },
-            { id: 17, name: "Policía Local: Funciones", cat: "Policía" },
-            { id: 18, name: "Ley 5/2023 de Andalucía", cat: "Policía" },
-            { id: 19, name: "Derechos del Funcionario PL", cat: "Policía" },
-            { id: 20, name: "Régimen Disciplinario", cat: "Policía" },
-            { id: 21, name: "LO 2/86 de Seguridad", cat: "Policía" },
-            { id: 22, name: "Derecho Penal: Delitos", cat: "Penal" },
-            { id: 23, name: "Seguridad Vial (Código Penal)", cat: "Penal" },
-            { id: 24, name: "Proceso Penal: Detención", cat: "Penal" },
-            { id: 25, name: "Policía Judicial", cat: "Policía" },
-            { id: 26, name: "LO 4/2015 Seguridad Ciudadana", cat: "Estado" },
-            { id: 27, name: "Ley de Seguridad Vial", cat: "Tráfico" },
-            { id: 28, name: "Reglamento de Circulación", cat: "Tráfico" },
-            { id: 29, name: "Reglamento de Vehículos", cat: "Tráfico" },
-            { id: 30, name: "Transportes y Cargas", cat: "Tráfico" },
-            { id: 31, name: "Accidentología Vial", cat: "Tráfico" },
-            { id: 32, name: "Espectáculos Públicos", cat: "Específico" },
-            { id: 33, name: "Medio Ambiente y Ruidos", cat: "Específico" },
-            { id: 34, name: "Venta Ambulante", cat: "Específico" },
-            { id: 35, name: "Urbanismo y Ordenanzas", cat: "Específico" },
-            { id: 36, name: "Protección Civil", cat: "Específico" },
-            { id: 37, name: "Igualdad y Violencia Género", cat: "Estado" },
-            { id: 38, name: "Ética y Deontología", cat: "Policía" },
-            { id: 39, name: "Psicotécnicos", cat: "Psico" },
-            { id: 40, name: "Ortografía y Cultura", cat: "Cultura" }
+            { id: 3, name: "La Corona. Funciones del Rey", cat: "Estado" },
+            { id: 4, name: "Las Cortes Generales. Composición y Atribuciones", cat: "Estado" },
+            { id: 5, name: "El Gobierno y la Administración. Relaciones", cat: "Estado" },
+            { id: 6, name: "Organización Territorial del Estado", cat: "Estado" },
+            { id: 7, name: "El Estatuto de Autonomía para Andalucía", cat: "Andalucía" },
+            { id: 8, name: "Instituciones de la Comunidad Autónoma de Andalucía", cat: "Andalucía" },
+            { id: 9, name: "La Unión Europea. Instituciones", cat: "Europa" },
+            { id: 10, name: "Fuentes del Derecho Administrativo", cat: "Admin" },
+            { id: 11, name: "El Acto Administrativo. Concepto y Clases", cat: "Admin" },
+            { id: 12, name: "El Procedimiento Administrativo Común", cat: "Admin" },
+            { id: 13, name: "Régimen Local Español. Concepto y Principios", cat: "Local" },
+            { id: 14, name: "El Municipio. Territorio y Población", cat: "Local" },
+            { id: 15, name: "Organización de los Municipios de Régimen Común", cat: "Local" },
+            { id: 16, name: "Haciendas Locales: Clasificación de Ingresos", cat: "Local" },
+            { id: 17, name: "Ley 5/2023 de Policías Locales de Andalucía", cat: "Policía" },
+            { id: 18, name: "Normativa sobre Selección y Formación de PPL", cat: "Policía" },
+            { id: 19, name: "La Ley Orgánica de Fuerzas y Cuerpos de Seguridad", cat: "Policía" },
+            { id: 20, name: "La Ética Policial. Deontología Profesional", cat: "Policía" },
+            { id: 21, name: "Derecho Penal I: Principios Generales", cat: "Penal" },
+            { id: 22, name: "Derecho Penal II: Delitos contra las personas", cat: "Penal" },
+            { id: 23, name: "Delitos contra el Patrimonio y el Orden Socioeconómico", cat: "Penal" },
+            { id: 24, name: "Delitos contra la Libertad y la Indemnidad Sexual", cat: "Penal" },
+            { id: 25, name: "Delitos contra la Seguridad Colectiva", cat: "Penal" },
+            { id: 26, name: "Delitos de los Funcionarios Públicos contra Garantías Const.", cat: "Penal" },
+            { id: 27, name: "Ley de Seguridad Vial y Normativa de Tráfico", cat: "Tráfico" },
+            { id: 28, name: "El Reglamento General de Circulación", cat: "Tráfico" },
+            { id: 29, name: "El Procedimiento Sancionador en Materia de Tráfico", cat: "Tráfico" },
+            { id: 30, name: "Accidentes de Tráfico: Concepto y Diligencias", cat: "Tráfico" },
+            { id: 31, name: "Transportes: Normativa y Clasificación", cat: "Tráfico" },
+            { id: 32, name: "Vida en Sociedad: Personalidad y Socialización", cat: "Social" },
+            { id: 33, name: "La Ciudad: Origen y Evolución del Fenómeno Urbano", cat: "Social" },
+            { id: 34, name: "Marginación y Exclusión Social", cat: "Social" },
+            { id: 35, name: "La Inmigración en Andalucía y España", cat: "Social" },
+            { id: 36, name: "Igualdad de Género y Violencia de Género", cat: "Social" },
+            { id: 37, name: "Protección Civil: Normativa y Planificación", cat: "Auxilio" },
+            { id: 38, name: "Primeros Auxilios: Actuaciones en Urgencias", cat: "Auxilio" },
+            { id: 39, name: "Prevención de Riesgos Laborales en el Ámbito Policial", cat: "Riesgos" },
+            { id: 40, name: "Armamento y Tiro: Normas de Seguridad", cat: "Armas" }
+        ];
+
+        const MUNICIPIOS_CADIZ = [
+            { id: "cad", name: "Cádiz Capital", tests: 4, official: true, color: "bg-blue-600" },
+            { id: "jer", name: "Jerez de la Frontera", tests: 3, official: true, color: "bg-red-700" },
+            { id: "alg", name: "Algeciras", tests: 2, official: true, color: "bg-green-700" },
+            { id: "sfe", name: "San Fernando", tests: 2, official: true, color: "bg-blue-400" },
+            { id: "pue", name: "El Puerto de Sta. María", tests: 3, official: true, color: "bg-orange-500" },
+            { id: "chi", name: "Chiclana de la Ftra.", tests: 2, official: true, color: "bg-indigo-600" }
+        ];
+
+        const PSICOTECNICOS = [
+            { id: "fig", name: "Series de Figuras", items: 25, cat: "Razonamiento" },
+            { id: "num", name: "Cálculo Numérico", items: 20, cat: "Aptitud" },
+            { id: "abs", name: "Razonamiento Abstracto", items: 30, cat: "Lógica" },
+            { id: "mem", name: "Memoria Visual", items: 15, cat: "Atención" },
+            { id: "ver", name: "Aptitud Verbal", items: 20, cat: "Idioma" }
         ];
 
         const App = () => {
             const [view, setView] = useState('home'); 
-            const [activeTab, setActiveTab] = useState('temas');
-            const [numQ, setNumQ] = useState(20);
-            const [selectedTopic, setSelectedTopic] = useState(null);
-            const [failedPool, setFailedPool] = useState([]);
+            const [tab, setTab] = useState('municipios');
             const [test, setTest] = useState({ questions: [], current: 0, answers: {}, source: '' });
+            const [errors, setErrors] = useState([]); // ALMACÉN DE ERRORES
             const [loading, setLoading] = useState(false);
 
-            useEffect(() => {
-                const stored = localStorage.getItem('opocal_errors');
-                if (stored) setFailedPool(JSON.parse(stored));
-            }, []);
-
-            const saveFailed = (q) => {
-                if (!failedPool.some(item => item.q === q.q)) {
-                    const newPool = [...failedPool, q];
-                    setFailedPool(newPool);
-                    localStorage.setItem('opocal_errors', JSON.stringify(newPool));
-                }
-            };
-
-            const deleteLearned = (qText) => {
-                const newPool = failedPool.filter(item => item.q !== qText);
-                setFailedPool(newPool);
-                localStorage.setItem('opocal_errors', JSON.stringify(newPool));
-            };
-
-            const startTest = async (topic) => {
+            const startTest = (item, type) => {
                 setLoading(true);
-                const title = topic.name || topic;
-                
-                if (apiKey) {
-                    try {
-                        const prompt = `Genera un examen de ${numQ} preguntas de test sobre "${title}" para Policía Local de Andalucía. Formato JSON: { "questions": [{ "q": "", "options": ["","","",""], "correct": 0, "expl": "" }] }`;
-                        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } })
-                        });
-                        const data = await res.json();
-                        const json = JSON.parse(data.candidates[0].content.parts[0].text);
-                        setTest({ questions: json.questions, current: 0, answers: {}, source: title });
-                        setView('quiz');
-                    } catch (e) { alert("Error API. Usando modo local."); loadMock(title); }
-                } else {
-                    loadMock(title);
-                }
-                setLoading(false);
+                setTimeout(() => {
+                    const mock = Array.from({length: 20}, (_, i) => ({
+                        q: `[PREGUNTA ${type.toUpperCase()}] Relacionado con: ${item.name}. ¿Cuál es la respuesta correcta según la normativa oficial?`,
+                        options: ["Opción A (Correcta)", "Opción B", "Opción C", "Opción D"],
+                        correct: 0,
+                        expl: `Explicación detallada del contenido de ${item.name}.`
+                    }));
+                    setTest({ questions: mock, current: 0, answers: {}, source: item.name });
+                    setView('quiz');
+                    setLoading(false);
+                    window.scrollTo(0,0);
+                }, 600);
             };
 
-            const loadMock = (title) => {
-                const mock = Array.from({length: numQ}, (_, i) => ({
-                    q: `[PREGUNTA ${i+1}] Sobre la normativa de ${title}. ¿Cuál es la opción correcta según la Ley 5/2023?`,
-                    options: ["Opción A (incorrecta)", "Opción B (incorrecta)", "Opción C (correcta)", "Opción D (incorrecta)"],
-                    correct: 2,
-                    expl: `Explicación para ${title}: Basado en el temario oficial de Andalucía 2024.`
-                }));
-                setTest({ questions: mock, current: 0, answers: {}, source: title });
+            const startErrorsTest = () => {
+                if (errors.length === 0) return;
+                setTest({ questions: errors, current: 0, answers: {}, source: 'ALMACÉN DE ERRORES' });
                 setView('quiz');
             };
 
             const handleAnswer = (idx) => {
                 if (test.answers[test.current] !== undefined) return;
-                if (idx !== -1 && idx !== test.questions[test.current].correct) {
-                    saveFailed(test.questions[test.current]);
+                
+                const currentQuestion = test.questions[test.current];
+                const isCorrect = idx === currentQuestion.correct;
+                
+                if (!isCorrect) {
+                    // Guardar en almacén si no estaba ya
+                    setErrors(prev => {
+                        if (prev.some(e => e.q === currentQuestion.q)) return prev;
+                        return [...prev, currentQuestion];
+                    });
                 }
+
                 setTest(t => ({ ...t, answers: { ...t.answers, [t.current]: idx } }));
             };
 
             if (loading) return (
-                <div className="h-screen bg-slate-900 flex flex-col items-center justify-center text-white p-10 text-center">
-                    <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p className="font-black uppercase text-[10px] tracking-widest">Generando examen oficial...</p>
+                <div className="h-screen flex flex-col items-center justify-center bg-slate-900 text-white">
+                    <div className="w-10 h-10 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p className="text-[10px] font-bold tracking-[0.2em]">CARGANDO TEST...</p>
                 </div>
             );
 
             return (
-                <div className="app-height max-w-md mx-auto bg-white flex flex-col shadow-2xl relative overflow-hidden">
+                <div className="min-h-screen max-w-md mx-auto bg-slate-50 flex flex-col relative pb-32">
                     
-                    {/* CABECERA */}
-                    <header className="gradient-blue px-6 pt-10 pb-6 shrink-0 text-white rounded-b-[2rem] shadow-lg">
+                    {/* TOP HEADER */}
+                    <header className={`px-6 pt-12 pb-6 text-white rounded-b-[2rem] shadow-lg ${view === 'quiz' ? 'bg-slate-900' : 'gradient-cadiz'}`}>
                         <div className="flex justify-between items-center mb-4">
                             <div>
-                                <h1 className="text-xl font-black italic tracking-tighter">ANDALUCÍA <span className="text-blue-300">40T</span></h1>
-                                <p className="text-[8px] font-bold opacity-60 uppercase tracking-widest">Cádiz y Municipios</p>
+                                <h1 className="text-xl font-black italic">POL <span className="text-yellow-400">ANDALUCÍA</span></h1>
+                                <p className="text-[8px] font-bold opacity-70 tracking-widest uppercase">Academia de Acceso Local</p>
                             </div>
-                            <div className="text-[9px] font-black bg-white/10 px-3 py-1 rounded-full border border-white/20">MASTER PRO</div>
+                            <div className="bg-white/10 p-2 rounded-lg"><i className="fa-solid fa-gavel text-yellow-400"></i></div>
                         </div>
+
                         {view === 'home' && (
-                            <div className="flex gap-1 bg-black/20 p-1 rounded-xl">
-                                {['temas', 'errores'].map(t => (
-                                    <button 
-                                        key={t}
-                                        onClick={() => setActiveTab(t)}
-                                        className={`flex-1 py-2 text-[9px] font-black uppercase rounded-lg transition-all ${activeTab === t ? 'bg-white text-blue-900' : 'text-white/40'}`}
-                                    >
-                                        {t === 'temas' ? 'Temario' : `Errores (${failedPool.length})`}
-                                    </button>
-                                ))}
+                            <div className="text-[10px] font-bold bg-black/20 p-2 rounded-xl text-center uppercase tracking-tighter">
+                                {tab === 'municipios' && "Exámenes Oficiales Cádiz"}
+                                {tab === 'temas' && "Temario Oficial (Temas 1 al 40)"}
+                                {tab === 'psico' && "Entrenamiento Psicotécnico"}
                             </div>
                         )}
                     </header>
 
-                    {/* CONTENIDO */}
-                    <main className="scroll-area p-5 no-scrollbar">
-                        {view === 'home' && activeTab === 'temas' && (
-                            <div className="space-y-3">
-                                {TEMARIO.map(t => (
-                                    <button 
-                                        key={t.id} 
-                                        onClick={() => { setSelectedTopic(t); setView('config'); }}
-                                        className="w-full bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4 text-left active-scale shadow-sm animate-card"
-                                    >
-                                        <span className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center font-black text-slate-800 text-[10px]">{t.id}</span>
+                    {/* MAIN CONTENT AREA */}
+                    <main className="flex-1 p-4">
+                        {view === 'home' && (
+                            <div className="mb-6">
+                                <button 
+                                    onClick={startErrorsTest}
+                                    className={`w-full p-4 rounded-2xl flex items-center justify-between border-2 transition-all active-scale ${errors.length > 0 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-slate-100 border-slate-200 text-slate-400'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <i className="fa-solid fa-triangle-exclamation"></i>
+                                        <span className="text-[11px] font-black uppercase">Almacén de Errores ({errors.length})</span>
+                                    </div>
+                                    <i className="fa-solid fa-arrow-right text-[10px]"></i>
+                                </button>
+                            </div>
+                        )}
+
+                        {view === 'home' && tab === 'municipios' && (
+                            <div className="grid grid-cols-1 gap-3">
+                                {MUNICIPIOS_CADIZ.map(m => (
+                                    <div key={m.id} onClick={() => startTest(m, 'cadiz')} className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4 active-scale shadow-sm animate-up">
+                                        <div className={`w-10 h-10 ${m.color} rounded-lg flex items-center justify-center text-white text-xs`}><i className="fa-solid fa-map-pin"></i></div>
                                         <div className="flex-1">
-                                            <p className="text-[12px] font-bold text-slate-700 leading-tight">{t.name}</p>
-                                            <p className="text-[7px] font-black text-blue-500 uppercase mt-1">{t.cat}</p>
+                                            <h3 className="text-[12px] font-black text-slate-800 uppercase">{m.name}</h3>
+                                            <p className="text-[8px] font-bold text-slate-400">{m.tests} EXÁMENES OFICIALES</p>
                                         </div>
-                                        <i className="fa-solid fa-chevron-right text-slate-200 text-[10px]"></i>
-                                    </button>
+                                        <i className="fa-solid fa-chevron-right text-slate-200 text-xs"></i>
+                                    </div>
                                 ))}
                             </div>
                         )}
 
-                        {view === 'home' && activeTab === 'errores' && (
-                            <div className="space-y-4">
-                                {failedPool.length === 0 ? (
-                                    <div className="text-center py-20 opacity-20">
-                                        <i className="fa-solid fa-check-circle text-5xl mb-4"></i>
-                                        <p className="font-black uppercase text-[10px]">Sin fallos</p>
+                        {view === 'home' && tab === 'temas' && (
+                            <div className="grid grid-cols-1 gap-2">
+                                {TEMARIO_OFICIAL.map(t => (
+                                    <div key={t.id} onClick={() => startTest(t, 'tema')} className="bg-white px-4 py-3 rounded-xl border border-slate-100 flex items-center gap-3 active-scale shadow-sm animate-up">
+                                        <span className="text-blue-600 font-black text-xs w-6">{t.id}</span>
+                                        <div className="flex-1">
+                                            <p className="text-[11px] font-bold text-slate-700 leading-tight">{t.name}</p>
+                                            <span className="text-[7px] font-black text-slate-400 uppercase">{t.cat}</span>
+                                        </div>
                                     </div>
-                                ) : (
-                                    <>
-                                        <button 
-                                            onClick={() => { setTest({ questions: failedPool, current: 0, answers: {}, source: 'Repaso Errores' }); setView('quiz'); }}
-                                            className="w-full bg-red-600 text-white py-4 rounded-xl font-black uppercase text-[10px] shadow-lg active-scale"
-                                        >
-                                            Repasar {failedPool.length} Fallos
-                                        </button>
-                                        {failedPool.map((q, i) => (
-                                            <div key={i} className="bg-white p-5 rounded-2xl border border-red-50 shadow-sm animate-card">
-                                                <p className="text-[12px] font-bold text-slate-700 leading-relaxed mb-4">{q.q}</p>
-                                                <button onClick={() => deleteLearned(q.q)} className="text-[9px] font-black text-red-400 uppercase"><i className="fa-solid fa-trash mr-2"></i>Ya la aprendí</button>
-                                            </div>
-                                        ))}
-                                    </>
-                                )}
+                                ))}
                             </div>
                         )}
 
-                        {view === 'config' && (
-                            <div className="text-center py-10 animate-card">
-                                <h3 className="text-xl font-black text-slate-800 mb-2 uppercase italic">{selectedTopic?.name}</h3>
-                                <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-10">Número de preguntas</p>
-                                <div className="grid grid-cols-4 gap-2 mb-10 px-4">
-                                    {[10, 20, 50, 100].map(n => (
-                                        <button key={n} onClick={() => setNumQ(n)} className={`py-4 rounded-xl font-black transition-all ${numQ === n ? 'bg-blue-900 text-white' : 'bg-slate-50 text-slate-400'}`}>{n}</button>
-                                    ))}
-                                </div>
-                                <button onClick={() => startTest(selectedTopic)} className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black uppercase text-[11px] shadow-xl active-scale">Comenzar Examen</button>
-                                <button onClick={() => setView('home')} className="mt-6 text-slate-300 font-black text-[9px] uppercase">Atrás</button>
+                        {view === 'home' && tab === 'psico' && (
+                            <div className="grid grid-cols-1 gap-3">
+                                {PSICOTECNICOS.map(p => (
+                                    <div key={p.id} onClick={() => startTest(p, 'psico')} className="bg-white p-5 rounded-3xl border-b-4 border-indigo-100 flex items-center gap-4 active-scale shadow-sm animate-up">
+                                        <div className="w-12 h-12 gradient-psycho rounded-2xl flex items-center justify-center text-white shadow-lg">
+                                            <i className="fa-solid fa-brain text-sm"></i>
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="text-[13px] font-black text-indigo-900 uppercase">{p.name}</h3>
+                                            <p className="text-[9px] font-bold text-indigo-300 uppercase">{p.cat} • {p.items} Ítems</p>
+                                        </div>
+                                        <div className="bg-indigo-50 px-3 py-1 rounded-full text-[8px] font-black text-indigo-500">PRÁCTICA</div>
+                                    </div>
+                                ))}
                             </div>
                         )}
 
                         {view === 'quiz' && (
-                            <div className="animate-card">
-                                <div className="bg-white p-6 rounded-[2rem] shadow-xl border border-slate-50 min-h-[400px] flex flex-col">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest truncate max-w-[150px]">{test.source}</span>
-                                        <span className="text-[10px] font-black text-slate-300">{test.current + 1} / {test.questions.length}</span>
-                                    </div>
-                                    
-                                    <div className="flex-1">
-                                        <h2 className="text-[14px] font-bold text-slate-800 mb-8 leading-relaxed">{test.questions[test.current]?.q}</h2>
-                                        <div className="space-y-2">
-                                            {test.questions[test.current]?.options.map((opt, i) => {
-                                                const answered = test.answers[test.current] !== undefined && test.answers[test.current] !== -1;
-                                                const isCorrect = i === test.questions[test.current].correct;
-                                                const isSelected = i === test.answers[test.current];
-                                                
-                                                let style = "bg-slate-50 border-transparent text-slate-600";
-                                                if (answered) {
-                                                    if (isCorrect) style = "bg-green-100 border-green-500 text-green-900";
-                                                    else if (isSelected) style = "bg-red-100 border-red-500 text-red-900 opacity-60";
-                                                    else style = "opacity-40 grayscale";
-                                                }
-
-                                                return (
-                                                    <button 
-                                                        key={i} 
-                                                        onClick={() => handleAnswer(i)}
-                                                        className={`w-full p-4 rounded-xl border-2 text-left text-[12px] font-semibold transition-all flex gap-3 ${style}`}
-                                                    >
-                                                        <span className="opacity-30">{String.fromCharCode(65+i)}</span>
-                                                        <span>{opt}</span>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-
-                                    {(test.answers[test.current] !== undefined && test.answers[test.current] !== -1) && (
-                                        <div className="mt-6 p-4 bg-slate-900 text-white rounded-xl text-[10px] italic leading-relaxed animate-card">
-                                            {test.questions[test.current].expl}
-                                        </div>
-                                    )}
+                            <div className="animate-up">
+                                <div className="flex justify-between items-center mb-4 px-2">
+                                    <button onClick={() => setView('home')} className="text-slate-400 text-[10px] font-bold tracking-widest"><i className="fa-solid fa-arrow-left mr-2"></i> SALIR</button>
+                                    <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-3 py-1 rounded-full uppercase">P {test.current + 1} / {test.questions.length}</span>
                                 </div>
 
-                                <div className="flex gap-2 mt-4">
-                                    <button onClick={() => setTest(t => ({...t, current: Math.max(0, t.current-1)}))} className="flex-1 bg-white border py-4 rounded-xl font-black text-[9px] uppercase text-slate-400">Retroceder</button>
-                                    {test.answers[test.current] === undefined ? (
-                                        <button onClick={() => handleAnswer(-1)} className="flex-1 bg-slate-100 text-slate-400 py-4 rounded-xl font-black text-[9px] uppercase">Blanco</button>
-                                    ) : (
-                                        <button 
-                                            onClick={() => {
-                                                if(test.current < test.questions.length - 1) setTest(t => ({...t, current: t.current + 1}));
-                                                else setView('results');
-                                            }}
-                                            className="flex-[2] bg-blue-900 text-white py-4 rounded-xl font-black text-[9px] uppercase shadow-lg"
-                                        >
-                                            Siguiente
-                                        </button>
-                                    )}
+                                <div className="bg-white p-6 rounded-[2rem] shadow-xl border border-slate-100 mb-4">
+                                    <p className="text-[14px] font-bold text-slate-800 leading-relaxed mb-6 italic">"{test.questions[test.current].q}"</p>
+                                    <div className="space-y-2">
+                                        {test.questions[test.current].options.map((opt, i) => {
+                                            const answered = test.answers[test.current] !== undefined;
+                                            const isCorrect = i === test.questions[test.current].correct;
+                                            const isSelected = i === test.answers[test.current];
+                                            let style = "bg-slate-50 border-slate-100 text-slate-600";
+                                            if (answered) {
+                                                if (isCorrect) style = "bg-green-100 border-green-500 text-green-900";
+                                                else if (isSelected) style = "bg-red-100 border-red-500 text-red-900";
+                                                else style = "opacity-30 border-transparent";
+                                            }
+                                            return (
+                                                <button key={i} onClick={() => handleAnswer(i)} className={`w-full p-4 rounded-xl border-2 text-left text-[12px] font-bold flex gap-3 ${style}`}>
+                                                    <span className="opacity-30">{String.fromCharCode(65+i)}</span> {opt}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                                <button onClick={() => setView('results')} className="w-full mt-4 text-[9px] font-black text-slate-300 uppercase py-2">Finalizar Test</button>
+                                
+                                {test.answers[test.current] !== undefined && (
+                                    <div className="p-4 bg-slate-900 text-white/80 rounded-2xl text-[10px] mb-6 border-l-4 border-yellow-400">
+                                        {test.questions[test.current].expl}
+                                    </div>
+                                )}
+
+                                <div className="flex gap-2">
+                                    <button onClick={() => setTest(t => ({...t, current: Math.max(0, t.current-1)}))} className="flex-1 py-4 rounded-xl bg-white border font-bold text-[10px] text-slate-400 uppercase">Atrás</button>
+                                    <button onClick={() => {
+                                        if (test.current < test.questions.length - 1) setTest(t => ({...t, current: t.current + 1}));
+                                        else setView('results');
+                                    }} className="flex-[2] py-4 rounded-xl gradient-cadiz text-white font-bold text-[10px] uppercase shadow-lg">
+                                        {test.current === test.questions.length - 1 ? 'Finalizar Test' : 'Siguiente'}
+                                    </button>
+                                </div>
                             </div>
                         )}
 
                         {view === 'results' && (
-                            <div className="text-center py-10 animate-card">
-                                <div className="w-40 h-40 bg-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl border-8 border-slate-50">
-                                    <div className="text-center">
-                                        <div className="text-4xl font-black text-blue-900">
-                                            {Math.round((Object.values(test.answers).filter((a, i) => a === test.questions[i]?.correct).length / test.questions.length) * 100)}%
-                                        </div>
-                                        <div className="text-[8px] font-black text-slate-300 uppercase">Aciertos</div>
+                            <div className="text-center py-10 animate-up">
+                                <h2 className="text-4xl font-black text-slate-900 italic mb-2">RESULTADOS</h2>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">Resumen de la sesión</p>
+                                <div className="bg-white p-8 rounded-[3rem] shadow-xl border border-slate-100 mb-8">
+                                    <div className="flex justify-center gap-10">
+                                        <div><p className="text-2xl font-black text-green-600">{Object.values(test.answers).filter((a, i) => a === test.questions[i].correct).length}</p><p className="text-[8px] font-black text-slate-300 uppercase">Correctas</p></div>
+                                        <div><p className="text-2xl font-black text-red-600">{Object.values(test.answers).filter((a, i) => a !== test.questions[i].correct).length}</p><p className="text-[8px] font-black text-slate-300 uppercase">Erróneas</p></div>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-3 gap-2 mb-8 px-4">
-                                    <div className="bg-green-50 p-3 rounded-xl"><p className="text-green-600 font-black text-lg">{Object.values(test.answers).filter((a, i) => a === test.questions[i]?.correct).length}</p><p className="text-[7px] font-black uppercase text-green-400">Ok</p></div>
-                                    <div className="bg-red-50 p-3 rounded-xl"><p className="text-red-600 font-black text-lg">{Object.values(test.answers).filter((a, i) => a !== -1 && a !== test.questions[i]?.correct).length}</p><p className="text-[7px] font-black uppercase text-red-400">Error</p></div>
-                                    <div className="bg-slate-50 p-3 rounded-xl"><p className="text-slate-600 font-black text-lg">{Object.values(test.answers).filter(a => a === -1).length}</p><p className="text-[7px] font-black uppercase text-slate-400">Nulo</p></div>
-                                </div>
-                                <button onClick={() => setView('home')} className="w-full bg-blue-900 text-white py-5 rounded-2xl font-black uppercase text-[10px] shadow-lg">Volver al Temario</button>
+                                <button onClick={() => setView('home')} className="w-full py-5 gradient-cadiz text-white rounded-2xl font-black uppercase text-[10px]">Volver al Menú</button>
                             </div>
                         )}
                     </main>
 
-                    {/* BARRA NAVEGACIÓN */}
+                    {/* STICKY BOTTOM NAVIGATION */}
                     {view === 'home' && (
-                        <nav className="fixed bottom-6 left-6 right-6 h-16 bg-slate-900 rounded-2xl shadow-2xl flex items-center justify-around px-2 border border-white/10 z-50">
-                            <button onClick={() => setActiveTab('temas')} className={`flex-1 flex flex-col items-center gap-1 ${activeTab === 'temas' ? 'text-blue-400' : 'text-white/20'}`}>
-                                <i className="fa-solid fa-book-open text-sm"></i>
-                                <span className="text-[7px] font-black uppercase">Temas</span>
+                        <nav className="fixed bottom-6 left-6 right-6 h-20 bg-slate-900/95 backdrop-blur-lg rounded-[2rem] shadow-2xl flex items-center justify-around px-4 border border-white/10 z-50">
+                            <button onClick={() => setTab('municipios')} className={`flex-1 flex flex-col items-center gap-1 transition-all ${tab === 'municipios' ? 'text-yellow-400 scale-110' : 'text-white/30'}`}>
+                                <i className="fa-solid fa-map-location text-lg"></i>
+                                <span className="text-[8px] font-black uppercase tracking-tighter">Cádiz</span>
                             </button>
-                            <button onClick={() => setActiveTab('errores')} className={`flex-1 flex flex-col items-center gap-1 ${activeTab === 'errores' ? 'text-red-400' : 'text-white/20'}`}>
-                                <i className="fa-solid fa-triangle-exclamation text-sm"></i>
-                                <span className="text-[7px] font-black uppercase">Fallos</span>
+                            <button onClick={() => setTab('temas')} className={`flex-1 flex flex-col items-center gap-1 transition-all ${tab === 'temas' ? 'text-yellow-400 scale-110' : 'text-white/30'}`}>
+                                <i className="fa-solid fa-book-open text-lg"></i>
+                                <span className="text-[8px] font-black uppercase tracking-tighter">Temas</span>
+                            </button>
+                            <button onClick={() => setTab('psico')} className={`flex-1 flex flex-col items-center gap-1 transition-all ${tab === 'psico' ? 'text-yellow-400 scale-110' : 'text-white/30'}`}>
+                                <i className="fa-solid fa-brain text-lg"></i>
+                                <span className="text-[8px] font-black uppercase tracking-tighter">Psico</span>
                             </button>
                         </nav>
                     )}
