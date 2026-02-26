@@ -27,7 +27,6 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // BASE DE DATOS COMPLETA 40 TEMAS
         const TEMARIO_OFICIAL = [
             { id: 1, name: "La Constitución Española de 1978: Valores y Principios", cat: "Estado" },
             { id: 2, name: "Derechos y Deberes Fundamentales", cat: "Estado" },
@@ -92,14 +91,18 @@
             const [view, setView] = useState('home'); 
             const [tab, setTab] = useState('municipios');
             const [test, setTest] = useState({ questions: [], current: 0, answers: {}, source: '' });
-            const [errors, setErrors] = useState([]); // ALMACÉN DE ERRORES
+            const [errors, setErrors] = useState([]); 
             const [loading, setLoading] = useState(false);
+            const [configItem, setConfigItem] = useState(null); // Para el modal de selección de nº preguntas
+            const [numQuestions, setNumQuestions] = useState(20);
 
-            const startTest = (item, type) => {
+            const startTest = (item, type, count = numQuestions) => {
                 setLoading(true);
+                setConfigItem(null);
                 setTimeout(() => {
-                    const mock = Array.from({length: 20}, (_, i) => ({
-                        q: `[PREGUNTA ${type.toUpperCase()}] Relacionado con: ${item.name}. ¿Cuál es la respuesta correcta según la normativa oficial?`,
+                    const mock = Array.from({length: count}, (_, i) => ({
+                        id: Math.random().toString(36).substr(2, 9),
+                        q: `[PREGUNTA ${type.toUpperCase()}] Relacionado con: ${item.name}. ¿Cuál es la respuesta correcta según la normativa oficial? (Ref: ${i+1})`,
                         options: ["Opción A (Correcta)", "Opción B", "Opción C", "Opción D"],
                         correct: 0,
                         expl: `Explicación detallada del contenido de ${item.name}.`
@@ -111,10 +114,8 @@
                 }, 600);
             };
 
-            const startErrorsTest = () => {
-                if (errors.length === 0) return;
-                setTest({ questions: errors, current: 0, answers: {}, source: 'ALMACÉN DE ERRORES' });
-                setView('quiz');
+            const forgetError = (qId) => {
+                setErrors(prev => prev.filter(e => e.id !== qId));
             };
 
             const handleAnswer = (idx) => {
@@ -123,8 +124,7 @@
                 const currentQuestion = test.questions[test.current];
                 const isCorrect = idx === currentQuestion.correct;
                 
-                if (!isCorrect) {
-                    // Guardar en almacén si no estaba ya
+                if (!isCorrect && idx !== -1) {
                     setErrors(prev => {
                         if (prev.some(e => e.q === currentQuestion.q)) return prev;
                         return [...prev, currentQuestion];
@@ -159,6 +159,7 @@
                                 {tab === 'municipios' && "Exámenes Oficiales Cádiz"}
                                 {tab === 'temas' && "Temario Oficial (Temas 1 al 40)"}
                                 {tab === 'psico' && "Entrenamiento Psicotécnico"}
+                                {tab === 'config_errors' && "Gestión de Fallos"}
                             </div>
                         )}
                     </header>
@@ -168,22 +169,56 @@
                         {view === 'home' && (
                             <div className="mb-6">
                                 <button 
-                                    onClick={startErrorsTest}
+                                    onClick={() => setTab('config_errors')}
                                     className={`w-full p-4 rounded-2xl flex items-center justify-between border-2 transition-all active-scale ${errors.length > 0 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-slate-100 border-slate-200 text-slate-400'}`}
                                 >
                                     <div className="flex items-center gap-3">
                                         <i className="fa-solid fa-triangle-exclamation"></i>
                                         <span className="text-[11px] font-black uppercase">Almacén de Errores ({errors.length})</span>
                                     </div>
-                                    <i className="fa-solid fa-arrow-right text-[10px]"></i>
+                                    <i className="fa-solid fa-gear text-[10px]"></i>
                                 </button>
+                            </div>
+                        )}
+
+                        {view === 'home' && tab === 'config_errors' && (
+                            <div className="animate-up space-y-4">
+                                <button onClick={() => setTab('municipios')} className="text-slate-400 text-[10px] font-black uppercase mb-2"><i className="fa-solid fa-arrow-left mr-2"></i> Volver</button>
+                                {errors.length > 0 ? (
+                                    <>
+                                        <button 
+                                            onClick={() => {
+                                                setTest({ questions: errors, current: 0, answers: {}, source: 'REPASO DE ERRORES' });
+                                                setView('quiz');
+                                            }}
+                                            className="w-full py-4 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase shadow-lg mb-4"
+                                        >
+                                            Realizar Test de Errores
+                                        </button>
+                                        <div className="space-y-3">
+                                            {errors.map((e, idx) => (
+                                                <div key={idx} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col gap-3">
+                                                    <p className="text-[11px] font-bold text-slate-700 leading-tight italic">"{e.q}"</p>
+                                                    <button 
+                                                        onClick={() => forgetError(e.id)}
+                                                        className="self-end text-[9px] font-black text-red-500 uppercase flex items-center gap-1"
+                                                    >
+                                                        <i className="fa-solid fa-trash-can"></i> Olvidar
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="text-center py-20 opacity-20 italic font-black uppercase text-xs">No hay errores guardados</div>
+                                )}
                             </div>
                         )}
 
                         {view === 'home' && tab === 'municipios' && (
                             <div className="grid grid-cols-1 gap-3">
                                 {MUNICIPIOS_CADIZ.map(m => (
-                                    <div key={m.id} onClick={() => startTest(m, 'cadiz')} className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4 active-scale shadow-sm animate-up">
+                                    <div key={m.id} onClick={() => setConfigItem({item: m, type: 'cadiz'})} className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4 active-scale shadow-sm animate-up">
                                         <div className={`w-10 h-10 ${m.color} rounded-lg flex items-center justify-center text-white text-xs`}><i className="fa-solid fa-map-pin"></i></div>
                                         <div className="flex-1">
                                             <h3 className="text-[12px] font-black text-slate-800 uppercase">{m.name}</h3>
@@ -198,7 +233,7 @@
                         {view === 'home' && tab === 'temas' && (
                             <div className="grid grid-cols-1 gap-2">
                                 {TEMARIO_OFICIAL.map(t => (
-                                    <div key={t.id} onClick={() => startTest(t, 'tema')} className="bg-white px-4 py-3 rounded-xl border border-slate-100 flex items-center gap-3 active-scale shadow-sm animate-up">
+                                    <div key={t.id} onClick={() => setConfigItem({item: t, type: 'tema'})} className="bg-white px-4 py-3 rounded-xl border border-slate-100 flex items-center gap-3 active-scale shadow-sm animate-up">
                                         <span className="text-blue-600 font-black text-xs w-6">{t.id}</span>
                                         <div className="flex-1">
                                             <p className="text-[11px] font-bold text-slate-700 leading-tight">{t.name}</p>
@@ -212,7 +247,7 @@
                         {view === 'home' && tab === 'psico' && (
                             <div className="grid grid-cols-1 gap-3">
                                 {PSICOTECNICOS.map(p => (
-                                    <div key={p.id} onClick={() => startTest(p, 'psico')} className="bg-white p-5 rounded-3xl border-b-4 border-indigo-100 flex items-center gap-4 active-scale shadow-sm animate-up">
+                                    <div key={p.id} onClick={() => setConfigItem({item: p, type: 'psico'})} className="bg-white p-5 rounded-3xl border-b-4 border-indigo-100 flex items-center gap-4 active-scale shadow-sm animate-up">
                                         <div className="w-12 h-12 gradient-psycho rounded-2xl flex items-center justify-center text-white shadow-lg">
                                             <i className="fa-solid fa-brain text-sm"></i>
                                         </div>
@@ -223,6 +258,33 @@
                                         <div className="bg-indigo-50 px-3 py-1 rounded-full text-[8px] font-black text-indigo-500">PRÁCTICA</div>
                                     </div>
                                 ))}
+                            </div>
+                        )}
+
+                        {/* MODAL CONFIGURACIÓN PREGUNTAS */}
+                        {configItem && (
+                            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-end justify-center">
+                                <div className="bg-white w-full max-w-md rounded-t-[3rem] p-8 animate-up shadow-2xl">
+                                    <h3 className="text-sm font-black text-slate-800 uppercase mb-2 italic">{configItem.item.name}</h3>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">Selecciona nº de preguntas</p>
+                                    
+                                    <div className="grid grid-cols-4 gap-2 mb-10">
+                                        {[10, 20, 50, 100].map(n => (
+                                            <button 
+                                                key={n} 
+                                                onClick={() => setNumQuestions(n)}
+                                                className={`py-4 rounded-2xl font-black text-xs transition-all ${numQuestions === n ? 'bg-blue-900 text-white shadow-lg' : 'bg-slate-50 text-slate-400'}`}
+                                            >
+                                                {n}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex gap-3">
+                                        <button onClick={() => setConfigItem(null)} className="flex-1 py-5 bg-slate-100 text-slate-400 rounded-3xl font-black uppercase text-[10px]">Cerrar</button>
+                                        <button onClick={() => startTest(configItem.item, configItem.type)} className="flex-[2] py-5 gradient-cadiz text-white rounded-3xl font-black uppercase text-[10px] shadow-xl">Comenzar</button>
+                                    </div>
+                                </div>
                             </div>
                         )}
 
@@ -280,7 +342,7 @@
                                 <div className="bg-white p-8 rounded-[3rem] shadow-xl border border-slate-100 mb-8">
                                     <div className="flex justify-center gap-10">
                                         <div><p className="text-2xl font-black text-green-600">{Object.values(test.answers).filter((a, i) => a === test.questions[i].correct).length}</p><p className="text-[8px] font-black text-slate-300 uppercase">Correctas</p></div>
-                                        <div><p className="text-2xl font-black text-red-600">{Object.values(test.answers).filter((a, i) => a !== test.questions[i].correct).length}</p><p className="text-[8px] font-black text-slate-300 uppercase">Erróneas</p></div>
+                                        <div><p className="text-2xl font-black text-red-600">{Object.values(test.answers).filter((a, i) => a !== -1 && a !== test.questions[i].correct).length}</p><p className="text-[8px] font-black text-slate-300 uppercase">Erróneas</p></div>
                                     </div>
                                 </div>
                                 <button onClick={() => setView('home')} className="w-full py-5 gradient-cadiz text-white rounded-2xl font-black uppercase text-[10px]">Volver al Menú</button>
