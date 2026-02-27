@@ -1,117 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POLICÍA LOCAL ANDALUCÍA</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<style>
+body{font-family:sans-serif;background:#f1f5f9}
+</style>
+</head>
+
+<body>
+<div id="root"></div>
+
 <script type="text/babel">
+
 const { useState } = React;
 
-const App = () => {
-    const [view, setView] = useState('home'); 
-    const [tab, setTab] = useState('municipios');
-    const [test, setTest] = useState({ questions: [], current: 0, answers: {}, source: '' });
-    const [loading, setLoading] = useState(false);
+// 🔥 TU API GEMINI
+const API_KEY = "PON_AQUI_TU_API_KEY";
+const MODEL = "gemini-1.5-flash";
 
-    const startTest = (item, type) => {
-        setLoading(true);
-        setTimeout(() => {
-            const mock = Array.from({length: 20}, (_, i) => ({
-                q: `[PREGUNTA ${type.toUpperCase()}] Relacionado con: ${item.name}. ¿Cuál es la respuesta correcta?`,
-                options: ["Opción A (Correcta)", "Opción B", "Opción C", "Opción D"],
-                correct: 0,
-                expl: `Explicación detallada del contenido de ${item.name}.`
-            }));
-            setTest({ questions: mock, current: 0, answers: {}, source: item.name });
-            setView('quiz');
-            setLoading(false);
-            window.scrollTo(0,0);
-        }, 600);
-    };
+const TEMAS = [
+{ id:1, name:"Constitución Española"},
+{ id:2, name:"Derechos Fundamentales"},
+{ id:3, name:"Organización Territorial"},
+{ id:17, name:"Ley Policías Locales Andalucía"},
+{ id:21, name:"Derecho Penal"},
+{ id:27, name:"Seguridad Vial"}
+];
 
-    const handleAnswer = (idx) => {
-        if (test.answers[test.current] !== undefined) return;
-        setTest(t => ({ ...t, answers: { ...t.answers, [t.current]: idx } }));
-    };
+function App(){
 
-    if (loading) return (
-        <div className="h-screen flex items-center justify-center bg-slate-900 text-white">
-            Cargando test...
-        </div>
-    );
+const [view,setView]=useState("menu");
+const [loading,setLoading]=useState(false);
+const [test,setTest]=useState({questions:[],current:0,answers:{}});
 
-    return (
-        <div className="min-h-screen max-w-md mx-auto bg-slate-50 pb-32">
+//////////////////////////////////////////////////////////
+// 🧠 GENERAR PREGUNTAS CON GEMINI
+//////////////////////////////////////////////////////////
 
-            {view === 'home' && (
-                <div className="p-6 text-center font-bold">
-                    Selecciona una categoría abajo
-                </div>
-            )}
+async function generarTest(tema){
 
-            {view === 'quiz' && (
-                <div className="p-4">
-                    <button onClick={() => setView('home')}>← Salir</button>
+setLoading(true);
 
-                    <h2 className="font-bold mt-4">
-                        Pregunta {test.current + 1}
-                    </h2>
+const prompt = `
+Crea 10 preguntas tipo test para oposiciones de Policía Local Andalucía sobre: ${tema}.
+Formato JSON EXACTO:
 
-                    <p className="my-4">{test.questions[test.current].q}</p>
+[
+{
+"q":"pregunta",
+"options":["A","B","C","D"],
+"correct":0,
+"expl":"explicación"
+}
+]
+`;
 
-                    {test.questions[test.current].options.map((opt, i) => (
-                        <button
-                            key={i}
-                            onClick={() => handleAnswer(i)}
-                            className="block w-full border p-3 my-2"
-                        >
-                            {opt}
-                        </button>
-                    ))}
+try{
 
-                    {test.answers[test.current] !== undefined && (
-                        <div className="bg-slate-900 text-white p-3 mt-4">
-                            {test.questions[test.current].expl}
-                        </div>
-                    )}
+const res = await fetch(
+`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`,
+{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({
+contents:[{parts:[{text:prompt}]}]
+})
+}
+);
 
-                    <button
-                        className="mt-4 border p-3"
-                        onClick={() => {
-                            if (test.current < test.questions.length - 1)
-                                setTest(t => ({...t, current: t.current + 1}));
-                            else setView('results');
-                        }}
-                    >
-                        Siguiente
-                    </button>
-                </div>
-            )}
+const data = await res.json();
 
-            {view === 'results' && (
-                <div className="p-6 text-center">
-                    <h2 className="text-2xl font-bold mb-4">Resultados</h2>
-                    <button onClick={() => setView('home')} className="border p-3">
-                        Volver al menú
-                    </button>
-                </div>
-            )}
+const text = data.candidates[0].content.parts[0].text;
 
-            {/* NAV INFERIOR */}
-            {view === 'home' && (
-                <nav className="fixed bottom-6 left-6 right-6 h-20 bg-slate-900 text-white rounded-2xl flex justify-around items-center">
-                    <button onClick={() => startTest({name:"Municipios Cádiz"}, 'cadiz')}>
-                        Cádiz
-                    </button>
+// limpiar posible markdown
+const json = JSON.parse(text.replace(/```json|```/g,""));
 
-                    <button onClick={() => startTest({name:"Temario Oficial"}, 'tema')}>
-                        Temas
-                    </button>
+setTest({questions:json,current:0,answers:{}});
+setView("quiz");
 
-                    <button onClick={() => startTest({name:"Psicotécnicos"}, 'psico')}>
-                        Psico
-                    </button>
-                </nav>
-            )}
+}catch(e){
+alert("Error generando preguntas IA");
+console.error(e);
+}
 
-        </div>
-    );
-};
+setLoading(false);
+}
 
-// 🔥 ESTA LÍNEA FALTABA
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+//////////////////////////////////////////////////////////
+
+function responder(i){
+if(test.answers[test.current]!=undefined) return;
+setTest(t=>({...t,answers:{...t.answers,[t.current]:i}}));
+}
+
+//////////////////////////////////////////////////////////
+
+if(loading)
+return <div className="h-screen flex items-center justify-center text-2xl font-bold">Generando test IA...</div>;
+
+//////////////////////////////////////////////////////////
+
+if(view==="menu")
+return(
+<div className="max-w-md mx-auto p-6">
+
+<h1 className="text-2xl font-black mb-6">POLICÍA LOCAL ANDALUCÍA</h1>
+
+{TEMAS.map(t=>
+<button
+key={t.id}
+onClick={()=>generarTest(t.name)}
+className="w-full bg-blue-600 text-white p-4 rounded-xl mb-3 font-bold"
+>
+Tema {t.id} — {t.name}
+</button>
+)}
+
+</div>
+);
+
+//////////////////////////////////////////////////////////
+
+if(view==="quiz"){
+
+const q = test.questions[test.current];
+
+return(
+<div className="max-w-md mx-auto p-6">
+
+<button onClick={()=>setView("menu")} className="mb-4">← Salir</button>
+
+<h2 className="font-bold mb-4">
+Pregunta {test.current+1} / {test.questions.length}
+</h2>
+
+<p className="mb-4">{q.q}</p>
+
+{q.options.map((opt,i)=>{
+
+const answered=test.answers[test.current]!=undefined;
+const correct=i===q.correct;
+const selected=i===test.answers[test.current];
+
+let style="border p-3 w-full text-left mb-2 rounded";
+
+if(answered){
+if(correct) style+=" bg-green-200";
+else if(selected) style+=" bg-red-200";
+else style+=" opacity-40";
+}
+
+return(
+<button key={i} onClick={()=>responder(i)} className={style}>
+{String.fromCharCode(65+i)}. {opt}
+</button>
+);
+
+})}
+
+{test.answers[test.current]!=undefined &&
+<div className="bg-slate-900 text-white p-3 mt-4 rounded">
+{q.expl}
+</div>
+}
+
+<button
+onClick={()=>{
+if(test.current < test.questions.length-1)
+setTest(t=>({...t,current:t.current+1}));
+else setView("menu");
+}}
+className="bg-blue-600 text-white p-3 rounded mt-4 w-full"
+>
+Siguiente
+</button>
+
+</div>
+);
+}
+
+}
+
+//////////////////////////////////////////////////////////
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+
 </script>
+</body>
+</html>
