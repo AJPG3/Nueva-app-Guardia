@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>POLICÍA LOCAL ANDALUCÍA</title>
+<title>MASTER POLICÍA LOCAL ANDALUCÍA</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -11,7 +11,7 @@
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
 <style>
-body{font-family:sans-serif;background:#f1f5f9}
+body{background:#0f172a;font-family:sans-serif}
 </style>
 </head>
 
@@ -20,46 +20,50 @@ body{font-family:sans-serif;background:#f1f5f9}
 
 <script type="text/babel">
 
-const { useState } = React;
+const {useState,useEffect} = React;
 
-// 🔥 TU API GEMINI
-const API_KEY = "AIzaSyBl1TDv5-OIBZGYLTCQ_v4g_oxkJPNs6eg";
+// 🔥 PON TU API KEY
+const API_KEY = "PON_AQUI_TU_API_KEY";
 const MODEL = "gemini-1.5-flash";
 
 const TEMAS = [
-{ id:1, name:"Constitución Española"},
-{ id:2, name:"Derechos Fundamentales"},
-{ id:3, name:"Organización Territorial"},
-{ id:17, name:"Ley Policías Locales Andalucía"},
-{ id:21, name:"Derecho Penal"},
-{ id:27, name:"Seguridad Vial"}
+"Constitución Española",
+"Derechos Fundamentales",
+"Organización Territorial",
+"Estatuto de Andalucía",
+"Ley Policías Locales Andalucía",
+"Derecho Penal",
+"Seguridad Vial",
+"Reglamento Circulación",
+"Procedimiento Administrativo",
+"Protección Civil"
 ];
 
 function App(){
 
 const [view,setView]=useState("menu");
 const [loading,setLoading]=useState(false);
-const [test,setTest]=useState({questions:[],current:0,answers:{}});
+const [questions,setQuestions]=useState([]);
+const [current,setCurrent]=useState(0);
+const [answers,setAnswers]=useState({});
+const [fallos,setFallos]=useState(
+JSON.parse(localStorage.getItem("fallos")||"[]")
+);
 
 //////////////////////////////////////////////////////////
-// 🧠 GENERAR PREGUNTAS CON GEMINI
+// GENERAR TEST IA
 //////////////////////////////////////////////////////////
 
-async function generarTest(tema){
+async function generarTest(tema,cantidad){
 
 setLoading(true);
 
 const prompt = `
-Crea 10 preguntas tipo test para oposiciones de Policía Local Andalucía sobre: ${tema}.
-Formato JSON EXACTO:
+Crea ${cantidad} preguntas tipo test para oposiciones de Policía Local Andalucía sobre ${tema}.
+Formato JSON:
 
 [
-{
-"q":"pregunta",
-"options":["A","B","C","D"],
-"correct":0,
-"expl":"explicación"
-}
+{"q":"","options":["","","",""],"correct":0,"expl":""}
 ]
 `;
 
@@ -77,84 +81,163 @@ contents:[{parts:[{text:prompt}]}]
 );
 
 const data = await res.json();
-
 const text = data.candidates[0].content.parts[0].text;
-
-// limpiar posible markdown
 const json = JSON.parse(text.replace(/```json|```/g,""));
 
-setTest({questions:json,current:0,answers:{}});
+setQuestions(json);
+setCurrent(0);
+setAnswers({});
 setView("quiz");
 
 }catch(e){
-alert("Error generando preguntas IA");
-console.error(e);
+alert("Error IA");
+console.log(e);
 }
 
 setLoading(false);
 }
 
 //////////////////////////////////////////////////////////
+// RESPONDER
+//////////////////////////////////////////////////////////
 
 function responder(i){
-if(test.answers[test.current]!=undefined) return;
-setTest(t=>({...t,answers:{...t.answers,[t.current]:i}}));
+
+if(answers[current]!=undefined) return;
+
+const nueva = {...answers,[current]:i};
+setAnswers(nueva);
+
+if(i !== questions[current].correct){
+const nuevosFallos=[...fallos,questions[current]];
+setFallos(nuevosFallos);
+localStorage.setItem("fallos",JSON.stringify(nuevosFallos));
+}
+
 }
 
 //////////////////////////////////////////////////////////
+// RESULTADOS
+//////////////////////////////////////////////////////////
+
+function resultados(){
+
+const correctas = Object.keys(answers).filter(
+i => answers[i] === questions[i].correct
+).length;
+
+return(
+<div className="p-6 text-center text-white">
+
+<h1 className="text-3xl font-black mb-6">RESULTADOS</h1>
+
+<p className="text-xl mb-4">Aciertos: {correctas}</p>
+<p className="text-xl mb-8">Fallos: {questions.length-correctas}</p>
+
+<button onClick={()=>setView("menu")}
+className="bg-blue-600 px-6 py-3 rounded-xl font-bold">
+Volver al menú
+</button>
+
+</div>
+);
+}
+
+//////////////////////////////////////////////////////////
+// LOADING
+//////////////////////////////////////////////////////////
 
 if(loading)
-return <div className="h-screen flex items-center justify-center text-2xl font-bold">Generando test IA...</div>;
+return <div className="h-screen flex items-center justify-center text-white text-2xl">
+Generando examen IA...
+</div>;
 
+//////////////////////////////////////////////////////////
+// MENU
 //////////////////////////////////////////////////////////
 
 if(view==="menu")
 return(
-<div className="max-w-md mx-auto p-6">
+<div className="max-w-md mx-auto p-6 text-white">
 
-<h1 className="text-2xl font-black mb-6">POLICÍA LOCAL ANDALUCÍA</h1>
+<h1 className="text-3xl font-black mb-6">
+MASTER POLICÍA LOCAL
+</h1>
+
+<h2 className="font-bold mb-3">TEST POR TEMA</h2>
 
 {TEMAS.map(t=>
 <button
-key={t.id}
-onClick={()=>generarTest(t.name)}
-className="w-full bg-blue-600 text-white p-4 rounded-xl mb-3 font-bold"
->
-Tema {t.id} — {t.name}
+key={t}
+onClick={()=>generarTest(t,20)}
+className="w-full bg-blue-600 p-3 rounded-xl mb-2 font-bold">
+{t}
 </button>
 )}
+
+<h2 className="font-bold mt-6 mb-3">MODO EXAMEN</h2>
+
+<button
+onClick={()=>generarTest("Temario completo",50)}
+className="w-full bg-green-600 p-3 rounded-xl mb-2 font-bold">
+Examen 50 preguntas
+</button>
+
+<button
+onClick={()=>generarTest("Temario completo",100)}
+className="w-full bg-green-700 p-3 rounded-xl mb-2 font-bold">
+Examen 100 preguntas
+</button>
+
+<h2 className="font-bold mt-6 mb-3">REPASO FALLOS</h2>
+
+<button
+onClick={()=>{
+if(fallos.length===0) return alert("No hay fallos");
+setQuestions(fallos);
+setCurrent(0);
+setAnswers({});
+setView("quiz");
+}}
+className="w-full bg-red-600 p-3 rounded-xl font-bold">
+Preguntas falladas ({fallos.length})
+</button>
 
 </div>
 );
 
 //////////////////////////////////////////////////////////
+// QUIZ
+//////////////////////////////////////////////////////////
 
 if(view==="quiz"){
 
-const q = test.questions[test.current];
+const q = questions[current];
 
 return(
-<div className="max-w-md mx-auto p-6">
+<div className="max-w-md mx-auto p-6 text-white">
 
-<button onClick={()=>setView("menu")} className="mb-4">← Salir</button>
+<button onClick={()=>setView("menu")} className="mb-4">
+← Salir
+</button>
 
-<h2 className="font-bold mb-4">
-Pregunta {test.current+1} / {test.questions.length}
-</h2>
+<p className="mb-4">
+Pregunta {current+1} / {questions.length}
+</p>
 
 <p className="mb-4">{q.q}</p>
 
 {q.options.map((opt,i)=>{
 
-const answered=test.answers[test.current]!=undefined;
-const correct=i===q.correct;
-const selected=i===test.answers[test.current];
+const answered = answers[current]!=undefined;
+const correct = i===q.correct;
+const selected = i===answers[current];
 
 let style="border p-3 w-full text-left mb-2 rounded";
 
 if(answered){
-if(correct) style+=" bg-green-200";
-else if(selected) style+=" bg-red-200";
+if(correct) style+=" bg-green-600";
+else if(selected) style+=" bg-red-600";
 else style+=" opacity-40";
 }
 
@@ -166,20 +249,18 @@ return(
 
 })}
 
-{test.answers[test.current]!=undefined &&
-<div className="bg-slate-900 text-white p-3 mt-4 rounded">
+{answers[current]!=undefined &&
+<div className="bg-slate-800 p-3 mt-4 rounded">
 {q.expl}
 </div>
 }
 
 <button
 onClick={()=>{
-if(test.current < test.questions.length-1)
-setTest(t=>({...t,current:t.current+1}));
-else setView("menu");
+if(current < questions.length-1) setCurrent(current+1);
+else setView("results");
 }}
-className="bg-blue-600 text-white p-3 rounded mt-4 w-full"
->
+className="bg-blue-600 w-full p-3 mt-4 rounded font-bold">
 Siguiente
 </button>
 
@@ -187,13 +268,14 @@ Siguiente
 );
 }
 
-}
-
 //////////////////////////////////////////////////////////
+
+if(view==="results") return resultados();
+
+}
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 
 </script>
 </body>
 </html>
-
