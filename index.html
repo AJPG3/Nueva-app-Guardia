@@ -3,23 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OPO-POL CÁDIZ: Exámenes Reales</title>
+    <title>CÁDIZ POL - Test Oficiales</title>
+    
+    <!-- Cargando estilos y fuentes primero -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .btn-nav { transition: all 0.2s; }
-        .btn-nav:active { scale: 0.95; }
-        .card-shadow { box-shadow: 0 4px 20px -2px rgba(0,0,0,0.1); }
-        .option-transition { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin: 0; }
+        .option-transition { transition: all 0.2s ease-in-out; }
+        #root { min-height: 100vh; }
+        /* Evitar que se vea el código antes de renderizar */
+        [script-type="text/babel"] { display: none; }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">
+        <!-- Loader inicial por si tarda la carga de scripts -->
+        <div style="display: flex; height: 100vh; align-items: center; justify-content: center; flex-direction: column;">
+            <div style="width: 40px; height: 40px; border: 4px solid #3b82f6; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 15px; font-family: sans-serif; font-weight: bold; color: #475569;">Iniciando Aplicación...</p>
+        </div>
+        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+    </div>
+
+    <!-- Scripts de React -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel para transformar JSX al vuelo -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
@@ -31,35 +43,27 @@
         ];
 
         const App = () => {
-            const [view, setView] = useState('menu'); // menu, quiz, results, errors
+            const [view, setView] = useState('menu'); 
             const [test, setTest] = useState({ questions: [], current: 0, answers: {}, results: null });
             const [errorDb, setErrorDb] = useState([]);
             const [loading, setLoading] = useState(false);
             const [selectedMun, setSelectedMun] = useState(MUNICIPIOS[0]);
             const [numQ, setNumQ] = useState(25);
 
-            const apiKey = "AIzaSyBl1TDv5-OIBZGYLTCQ_v4g_oxkJPNs6eg"; // La plataforma insertará la clave automáticamente
+            const apiKey = "AIzaSyBl1TDv5-OIBZGYLTCQ_v4g_oxkJPNs6eg"; 
 
             useEffect(() => {
                 const saved = localStorage.getItem('cadiz_police_errors');
-                if (saved) setErrorDb(JSON.parse(saved));
+                if (saved) {
+                    try { setErrorDb(JSON.parse(saved)); } catch(e) { console.error(e); }
+                }
             }, []);
 
             const generateTest = async (isReview = false) => {
                 setLoading(true);
-                
-                let prompt = "";
-                if (isReview) {
-                    const reviewData = [...errorDb].sort(() => 0.5 - Math.random()).slice(0, numQ);
-                    prompt = `Organiza estas preguntas en un formato JSON estricto: ${JSON.stringify(reviewData)}. 
-                    Asegúrate de que el JSON tenga exactamente esta estructura: {"questions":[{"q":"pregunta","o":["A","B","C","D"],"a":0,"j":"justificación"}]}`;
-                } else {
-                    prompt = `Genera un examen oficial real (o basado fielmente en convocatorias recientes) para la categoría de Policía Local en el municipio de ${selectedMun}, provincia de Cádiz (Andalucía). 
-                    Cantidad: ${numQ} preguntas. 
-                    Requisitos técnicos: Dificultad oficial, 4 opciones.
-                    Devuelve ÚNICAMENTE un objeto JSON con este formato: {"questions":[{"q":"pregunta","o":["A","B","C","D"],"a":0,"j":"justificación detallada mencionando artículo legal"}]}. 
-                    Nota: 'a' es el índice de la respuesta correcta (0 para A, 1 para B, etc).`;
-                }
+                const prompt = isReview 
+                    ? `Formato JSON estricto para estas preguntas: ${JSON.stringify(errorDb.slice(0, numQ))}. Estructura: {"questions":[{"q":"...","o":["..."],"a":0,"j":"..."}]}`
+                    : `Genera examen oficial Policía Local en ${selectedMun} (Cádiz). Cantidad: ${numQ}. JSON: {"questions":[{"q":"...","o":["A","B","C","D"],"a":0,"j":"justificación legal"}]}`;
 
                 try {
                     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
@@ -67,20 +71,12 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: prompt }] }],
-                            generationConfig: { 
-                                responseMimeType: "application/json"
-                            }
+                            generationConfig: { responseMimeType: "application/json" }
                         })
                     });
-
-                    if (!response.ok) throw new Error("API Error");
-                    
                     const data = await response.json();
-                    const textResponse = data.candidates[0].content.parts[0].text;
-                    const result = JSON.parse(textResponse);
+                    const result = JSON.parse(data.candidates[0].content.parts[0].text);
                     
-                    if (!result.questions || !Array.isArray(result.questions)) throw new Error("Invalid structure");
-
                     setTest({
                         questions: result.questions,
                         current: 0,
@@ -90,25 +86,19 @@
                     });
                     setView('quiz');
                 } catch (e) {
-                    console.error(e);
-                    alert("Error al conectar con la IA. Se ha producido un fallo en la generación del JSON. Por favor, intenta de nuevo.");
+                    alert("Error de conexión con la IA.");
                 } finally {
                     setLoading(false);
                 }
             };
 
             const handleAnswer = (idx) => {
-                // Si ya está respondida, no permitir cambiar (autocorrección activada)
                 if (test.answers[test.current] !== undefined) return;
-                
-                const newAnswers = { ...test.answers, [test.current]: idx };
-                setTest(prev => ({ ...prev, answers: newAnswers }));
+                setTest(prev => ({ ...prev, answers: { ...prev.answers, [prev.current]: idx } }));
             };
 
             const finalizeTest = () => {
-                let corrects = 0;
-                let fails = 0;
-                let empty = 0;
+                let corrects = 0; let fails = 0; let empty = 0;
                 const failedQuestions = [];
 
                 test.questions.forEach((q, i) => {
@@ -121,7 +111,6 @@
                     }
                 });
 
-                // Guardar fallos en la BD global
                 const newErrorDb = [...errorDb];
                 failedQuestions.forEach(fq => {
                     if (!newErrorDb.find(e => e.q === fq.q)) newErrorDb.push(fq);
@@ -141,159 +130,128 @@
             };
 
             if (loading) return (
-                <div className="min-h-screen flex flex-col items-center justify-center p-10 text-center bg-white">
+                <div className="flex flex-col items-center justify-center h-screen bg-white">
                     <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p className="font-bold text-slate-700 uppercase tracking-tighter">Generando examen oficial...</p>
-                    <p className="text-xs text-slate-400 mt-2">Accediendo a la base de datos de {selectedMun}...</p>
+                    <p className="font-bold text-slate-700 uppercase">Preparando examen...</p>
                 </div>
             );
 
             return (
-                <div className="max-w-xl mx-auto min-h-screen flex flex-col bg-white shadow-2xl relative">
-                    {/* Header */}
-                    <header className="bg-slate-900 p-6 text-white flex justify-between items-center sticky top-0 z-20">
-                        <div>
-                            <h1 className="text-xl font-extrabold tracking-tight">CÁDIZ<span className="text-blue-500">POL</span></h1>
-                            <p className="text-[10px] uppercase font-bold opacity-50 tracking-widest">Exámenes Municipales Reales</p>
-                        </div>
-                        {view === 'quiz' && <span className="text-xs font-black bg-blue-600 px-3 py-1 rounded-full">{test.current + 1} / {test.questions.length}</span>}
+                <div className="max-w-xl mx-auto min-h-screen bg-white shadow-2xl flex flex-col">
+                    <header className="bg-slate-900 p-6 text-white flex justify-between items-center">
+                        <h1 className="text-xl font-extrabold tracking-tight">CÁDIZ<span className="text-blue-500">POL</span></h1>
+                        {view === 'quiz' && <span className="text-xs font-bold bg-blue-600 px-3 py-1 rounded-full">{test.current + 1} / {test.questions.length}</span>}
                     </header>
 
-                    <main className="flex-1 p-5 pb-24">
+                    <main className="flex-1 p-5 overflow-y-auto pb-24">
                         {view === 'menu' && (
-                            <div className="space-y-6 animate-in fade-in">
-                                <section className="bg-blue-50 border border-blue-100 p-6 rounded-2xl">
-                                    <h2 className="text-sm font-black text-blue-900 uppercase mb-4 tracking-tight">Configurar Test</h2>
+                            <div className="space-y-6">
+                                <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                                    <h2 className="text-xs font-black text-blue-900 uppercase mb-4">Ajustes del Test</h2>
                                     <div className="space-y-4">
-                                        <div>
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Municipio de Cádiz</label>
-                                            <select value={selectedMun} onChange={e => setSelectedMun(e.target.value)} className="w-full mt-1 p-3 bg-white border border-slate-200 rounded-xl font-bold text-sm outline-none focus:ring-2 ring-blue-500 appearance-none">
-                                                {MUNICIPIOS.map(m => <option key={m} value={m}>{m}</option>)}
-                                            </select>
+                                        <select value={selectedMun} onChange={e => setSelectedMun(e.target.value)} className="w-full p-3 rounded-xl border border-slate-200 font-bold">
+                                            {MUNICIPIOS.map(m => <option key={m} value={m}>{m}</option>)}
+                                        </select>
+                                        <div className="flex gap-2">
+                                            {[10, 25, 50, 100].map(n => (
+                                                <button key={n} onClick={() => setNumQ(n)} className={`flex-1 py-2 rounded-lg text-xs font-bold ${numQ === n ? 'bg-blue-600 text-white' : 'bg-white border text-slate-400'}`}>{n}</button>
+                                            ))}
                                         </div>
-                                        <div>
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Número de preguntas</label>
-                                            <div className="flex gap-2 mt-1">
-                                                {[10, 25, 50, 100].map(n => (
-                                                    <button key={n} onClick={() => setNumQ(n)} className={`flex-1 py-2 rounded-lg font-black text-xs transition-all ${numQ === n ? 'bg-blue-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-400'}`}>{n}</button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <button onClick={() => generateTest(false)} className="w-full py-4 bg-slate-900 text-white rounded-xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all">Iniciar Examen Oficial</button>
+                                        <button onClick={() => generateTest(false)} className="w-full py-4 bg-slate-900 text-white rounded-xl font-black uppercase text-xs">Iniciar</button>
                                     </div>
-                                </section>
-
+                                </div>
                                 {errorDb.length > 0 && (
-                                    <section className="bg-red-50 border border-red-100 p-6 rounded-2xl flex justify-between items-center">
+                                    <div className="bg-red-50 p-6 rounded-2xl border border-red-100 flex justify-between items-center">
                                         <div>
-                                            <h3 className="text-sm font-black text-red-900 uppercase">Batería de Errores</h3>
-                                            <p className="text-[10px] font-bold text-red-600 uppercase">{errorDb.length} Preguntas por repasar</p>
+                                            <p className="text-xs font-black text-red-900 uppercase">Fallos: {errorDb.length}</p>
                                         </div>
                                         <div className="flex gap-2">
-                                            <button onClick={() => setView('errors')} className="p-3 bg-white text-red-600 border border-red-200 rounded-xl shadow-sm"><i className="fa-solid fa-list"></i></button>
-                                            <button onClick={() => generateTest(true)} className="p-3 bg-red-600 text-white rounded-xl shadow-lg active:scale-95 transition-all"><i className="fa-solid fa-play"></i></button>
+                                            <button onClick={() => setView('errors')} className="p-2 bg-white rounded-lg border text-red-600"><i className="fa-solid fa-list"></i></button>
+                                            <button onClick={() => generateTest(true)} className="p-2 bg-red-600 text-white rounded-lg"><i className="fa-solid fa-play"></i></button>
                                         </div>
-                                    </section>
+                                    </div>
                                 )}
                             </div>
                         )}
 
                         {view === 'quiz' && (
-                            <div className="animate-in slide-in-from-bottom-4">
-                                <div className="mb-4 text-center">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{test.municipio}</span>
+                            <div>
+                                <div className="bg-slate-50 p-8 rounded-3xl mb-6 text-center border">
+                                    <p className="font-bold text-slate-800">{test.questions[test.current].q}</p>
                                 </div>
-                                
-                                <div className="bg-slate-50 border border-slate-200 p-8 rounded-3xl mb-6 min-h-[160px] flex items-center justify-center text-center">
-                                    <p className="font-bold text-slate-800 leading-snug italic">{test.questions[test.current].q}</p>
-                                </div>
-
-                                <div className="space-y-3 mb-6">
+                                <div className="space-y-3">
                                     {test.questions[test.current].o.map((o, i) => {
                                         const userAnswer = test.answers[test.current];
                                         const isCorrect = i === test.questions[test.current].a;
                                         const isSelected = userAnswer === i;
-                                        const hasAnswered = userAnswer !== undefined;
-
-                                        let style = "bg-white border-slate-100 text-slate-600";
-                                        if (hasAnswered) {
-                                            if (isCorrect) style = "bg-green-50 border-green-500 text-green-700 shadow-sm";
-                                            else if (isSelected) style = "bg-red-50 border-red-500 text-red-700";
-                                            else style = "bg-white border-slate-50 opacity-50";
+                                        const answered = userAnswer !== undefined;
+                                        
+                                        let btnClass = "bg-white border-slate-200 text-slate-600";
+                                        if (answered) {
+                                            if (isCorrect) btnClass = "bg-green-100 border-green-500 text-green-800";
+                                            else if (isSelected) btnClass = "bg-red-100 border-red-500 text-red-800";
+                                            else btnClass = "bg-white opacity-40";
                                         }
 
                                         return (
-                                            <button 
-                                                key={i} 
-                                                disabled={hasAnswered}
-                                                onClick={() => handleAnswer(i)} 
-                                                className={`w-full p-4 rounded-2xl text-left text-sm font-semibold border-2 option-transition flex items-start gap-4 ${style}`}
-                                            >
-                                                <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 ${hasAnswered && isCorrect ? 'bg-green-600 text-white' : hasAnswered && isSelected ? 'bg-red-600 text-white' : isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                                                    {String.fromCharCode(65+i)}
-                                                </div>
-                                                <span className="pt-0.5 leading-tight">{o}</span>
+                                            <button key={i} onClick={() => handleAnswer(i)} disabled={answered} className={`w-full p-4 rounded-2xl text-left text-sm font-semibold border-2 flex gap-4 ${btnClass}`}>
+                                                <span className="font-black opacity-30">{String.fromCharCode(65+i)}</span>
+                                                {o}
                                             </button>
                                         );
                                     })}
                                 </div>
-
                                 {test.answers[test.current] !== undefined && (
-                                    <div className="bg-slate-900 text-white p-5 rounded-2xl mb-8 animate-in zoom-in-95">
-                                        <div className="flex items-center gap-2 mb-2 text-blue-400 font-black uppercase text-[10px] tracking-widest">
-                                            <i className="fa-solid fa-gavel"></i>
-                                            <span>Justificación Oficial</span>
-                                        </div>
-                                        <p className="text-xs font-medium italic opacity-90 leading-relaxed">
-                                            {test.questions[test.current].j}
-                                        </p>
+                                    <div className="mt-6 p-5 bg-slate-900 text-white rounded-2xl text-xs italic">
+                                        <p className="font-black text-blue-400 mb-1 uppercase tracking-widest">Justificación:</p>
+                                        {test.questions[test.current].j}
                                     </div>
                                 )}
-
-                                <div className="fixed bottom-0 left-0 right-0 p-5 bg-white/90 backdrop-blur-md flex gap-4 max-w-xl mx-auto border-t border-slate-100 z-10">
-                                    <button onClick={() => setTest(p => ({...p, current: Math.max(0, p.current-1)}))} disabled={test.current === 0} className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 disabled:opacity-30 active:scale-95 transition-all">
-                                        <i className="fa-solid fa-arrow-left"></i>
-                                    </button>
-                                    {test.current < test.questions.length - 1 ? (
-                                        <button onClick={() => setTest(p => ({...p, current: p.current+1}))} className="flex-1 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all">Siguiente</button>
-                                    ) : (
-                                        <button onClick={finalizeTest} className="flex-1 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl animate-pulse active:scale-95 transition-all">Finalizar Test</button>
-                                    )}
+                                <div className="fixed bottom-0 left-0 right-0 p-5 bg-white border-t flex gap-4 max-w-xl mx-auto">
+                                    <button onClick={() => setTest(p => ({...p, current: Math.max(0, p.current-1)}))} className="w-14 h-14 bg-slate-100 rounded-2xl"><i className="fa-solid fa-arrow-left"></i></button>
+                                    {test.current < test.questions.length - 1 ? 
+                                        <button onClick={() => setTest(p => ({...p, current: p.current+1}))} className="flex-1 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs">Siguiente</button> :
+                                        <button onClick={finalizeTest} className="flex-1 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs">Finalizar</button>
+                                    }
                                 </div>
                             </div>
                         )}
 
                         {view === 'results' && (
-                            <div className="text-center animate-in zoom-in-95">
-                                <div className={`w-24 h-24 mx-auto rounded-[2.5rem] flex items-center justify-center text-white text-5xl mb-6 shadow-2xl rotate-3 ${parseFloat(test.results.score) >= 5 ? 'bg-green-500' : 'bg-red-500'}`}>
-                                    <i className={`fa-solid ${parseFloat(test.results.score) >= 5 ? 'fa-medal' : 'fa-triangle-exclamation'}`}></i>
+                            <div className="text-center">
+                                <h2 className="text-6xl font-black mb-8 italic">{test.results.score}</h2>
+                                <div className="grid grid-cols-3 gap-2 mb-8">
+                                    <div className="bg-green-50 p-4 rounded-2xl"><p className="text-xl font-black text-green-600">{test.results.corrects}</p><p className="text-[8px] uppercase">Aciertos</p></div>
+                                    <div className="bg-red-50 p-4 rounded-2xl"><p className="text-xl font-black text-red-600">{test.results.fails}</p><p className="text-[8px] uppercase">Fallos</p></div>
+                                    <div className="bg-slate-50 p-4 rounded-2xl"><p className="text-xl font-black text-slate-400">{test.results.empty}</p><p className="text-[8px] uppercase">Blancos</p></div>
                                 </div>
-                                <h2 className="text-6xl font-black text-slate-900 tracking-tighter mb-2 italic">{test.results.score}</h2>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-10 italic">Puntuación Final</p>
-                                
-                                <div className="grid grid-cols-3 gap-2 mb-10">
-                                    <div className="bg-green-50 p-4 rounded-3xl border border-green-100">
-                                        <p className="text-2xl font-black text-green-600">{test.results.corrects}</p>
-                                        <p className="text-[9px] font-bold text-green-700 uppercase">Aciertos</p>
-                                    </div>
-                                    <div className="bg-red-50 p-4 rounded-3xl border border-red-100">
-                                        <p className="text-2xl font-black text-red-600">{test.results.fails}</p>
-                                        <p className="text-[9px] font-bold text-red-700 uppercase">Fallos</p>
-                                    </div>
-                                    <div className="bg-slate-50 p-4 rounded-3xl border border-slate-200">
-                                        <p className="text-2xl font-black text-slate-400">{test.results.empty}</p>
-                                        <p className="text-[9px] font-bold text-slate-400 uppercase">Blancos</p>
-                                    </div>
-                                </div>
-                                
-                                <button onClick={() => setView('menu')} className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl active:scale-95 transition-all">Volver al Menú</button>
+                                <button onClick={() => setView('menu')} className="w-full py-4 bg-slate-900 text-white rounded-xl font-black uppercase">Volver</button>
                             </div>
                         )}
 
                         {view === 'errors' && (
-                            <div className="animate-in slide-in-from-right">
-                                <div className="flex justify-between items-center mb-10 px-2">
-                                    <h2 className="text-xl font-extrabold italic uppercase tracking-tighter">Batería de Errores</h2>
-                                    <button on
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="font-black uppercase tracking-widest">Batería de Errores</h2>
+                                    <button onClick={() => setView('menu')} className="text-xs underline font-bold">Cerrar</button>
+                                </div>
+                                {errorDb.map((err, i) => (
+                                    <div key={i} className="p-5 bg-white border rounded-3xl relative">
+                                        <button onClick={() => removeFromErrorDb(i)} className="absolute top-4 right-4 text-green-600"><i className="fa-solid fa-check"></i></button>
+                                        <p className="text-sm font-bold pr-8 italic mb-2">"{err.q}"</p>
+                                        <p className="text-xs font-black text-green-600 uppercase">Correcta: {err.o[err.a]}</p>
+                                        <p className="text-[10px] text-slate-400 mt-2">{err.j}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        };
 
-
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
