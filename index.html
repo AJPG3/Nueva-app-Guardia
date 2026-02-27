@@ -265,4 +265,18 @@
                                 <i className="fa-solid fa-book-open text-lg"></i>
                                 <span className="text-[8px] font-black uppercase tracking-tighter">Temas</span>
                             </button>
-                            <button onClick={() => setTab('psico')} className={`flex-1 flex flex-col it
+                            <button onClick={() => setTab('psico')} className={`flex-1 flex flex-col items-center gap-1 transition-all ${tab === 'psico' ? 'text-yellow-400 scale-110' : 'text-white/30'}`}>
+                                <i className="fa-solid fa-brain text-lg"></i>
+                                <span className="text-[8px] font-black uppercase tracking-tighter">Psico</span>
+                            </button>
+                        </nav>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
