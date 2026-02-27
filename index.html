@@ -1,283 +1,263 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MASTER POLICÍA LOCAL ANDALUCÍA</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-<style>
-body{background:#0f172a;font-family:sans-serif}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OPO-POL CÁDIZ: Exámenes Reales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .btn-nav { transition: all 0.2s; }
+        .btn-nav:active { scale: 0.95; }
+        .card-shadow { box-shadow: 0 4px 20px -2px rgba(0,0,0,0.1); }
+    </style>
 </head>
-
 <body>
-<div id="root"></div>
-
-<script type="text/babel">
-
-const {useState,useEffect} = React;
-
-// 🔥 PON TU API KEY
-const apiKey = "AIzaSyBl1TDv5-OIBZGYLTCQ_v4g_oxkJPNs6eg"; 
-  const modelId = "gemini-2.5-flash-preview-09-2025";
-
-const TEMAS = [
-"Constitución Española",
-"Derechos Fundamentales",
-"Organización Territorial",
-"Estatuto de Andalucía",
-"Ley Policías Locales Andalucía",
-"Derecho Penal",
-"Seguridad Vial",
-"Reglamento Circulación",
-"Procedimiento Administrativo",
-"Protección Civil"
-];
-
-function App(){
-
-const [view,setView]=useState("menu");
-const [loading,setLoading]=useState(false);
-const [questions,setQuestions]=useState([]);
-const [current,setCurrent]=useState(0);
-const [answers,setAnswers]=useState({});
-const [fallos,setFallos]=useState(
-JSON.parse(localStorage.getItem("fallos")||"[]")
-);
-
-//////////////////////////////////////////////////////////
-// GENERAR TEST IA
-//////////////////////////////////////////////////////////
-
-async function generarTest(tema,cantidad){
-
-setLoading(true);
-
-const prompt = `
-Crea ${cantidad} preguntas tipo test para oposiciones de Policía Local Andalucía sobre ${tema}.
-Formato JSON:
-
-[
-{"q":"","options":["","","",""],"correct":0,"expl":""}
-]
-`;
-
-try{
-
-const res = await fetch(
-`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`,
-{
-method:"POST",
-headers:{ "Content-Type":"application/json" },
-body:JSON.stringify({
-contents:[{parts:[{text:prompt}]}]
-})
-}
-);
-
-const data = await res.json();
-const text = data.candidates[0].content.parts[0].text;
-const json = JSON.parse(text.replace(/```json|```/g,""));
-
-setQuestions(json);
-setCurrent(0);
-setAnswers({});
-setView("quiz");
-
-}catch(e){
-alert("Error IA");
-console.log(e);
-}
-
-setLoading(false);
-}
-
-//////////////////////////////////////////////////////////
-// RESPONDER
-//////////////////////////////////////////////////////////
-
-function responder(i){
-
-if(answers[current]!=undefined) return;
-
-const nueva = {...answers,[current]:i};
-setAnswers(nueva);
-
-if(i !== questions[current].correct){
-const nuevosFallos=[...fallos,questions[current]];
-setFallos(nuevosFallos);
-localStorage.setItem("fallos",JSON.stringify(nuevosFallos));
-}
-
-}
-
-//////////////////////////////////////////////////////////
-// RESULTADOS
-//////////////////////////////////////////////////////////
-
-function resultados(){
-
-const correctas = Object.keys(answers).filter(
-i => answers[i] === questions[i].correct
-).length;
-
-return(
-<div className="p-6 text-center text-white">
-
-<h1 className="text-3xl font-black mb-6">RESULTADOS</h1>
-
-<p className="text-xl mb-4">Aciertos: {correctas}</p>
-<p className="text-xl mb-8">Fallos: {questions.length-correctas}</p>
-
-<button onClick={()=>setView("menu")}
-className="bg-blue-600 px-6 py-3 rounded-xl font-bold">
-Volver al menú
-</button>
-
-</div>
-);
-}
-
-//////////////////////////////////////////////////////////
-// LOADING
-//////////////////////////////////////////////////////////
-
-if(loading)
-return <div className="h-screen flex items-center justify-center text-white text-2xl">
-Generando examen IA...
-</div>;
-
-//////////////////////////////////////////////////////////
-// MENU
-//////////////////////////////////////////////////////////
-
-if(view==="menu")
-return(
-<div className="max-w-md mx-auto p-6 text-white">
-
-<h1 className="text-3xl font-black mb-6">
-MASTER POLICÍA LOCAL
-</h1>
-
-<h2 className="font-bold mb-3">TEST POR TEMA</h2>
-
-{TEMAS.map(t=>
-<button
-key={t}
-onClick={()=>generarTest(t,20)}
-className="w-full bg-blue-600 p-3 rounded-xl mb-2 font-bold">
-{t}
-</button>
-)}
-
-<h2 className="font-bold mt-6 mb-3">MODO EXAMEN</h2>
-
-<button
-onClick={()=>generarTest("Temario completo",50)}
-className="w-full bg-green-600 p-3 rounded-xl mb-2 font-bold">
-Examen 50 preguntas
-</button>
-
-<button
-onClick={()=>generarTest("Temario completo",100)}
-className="w-full bg-green-700 p-3 rounded-xl mb-2 font-bold">
-Examen 100 preguntas
-</button>
-
-<h2 className="font-bold mt-6 mb-3">REPASO FALLOS</h2>
-
-<button
-onClick={()=>{
-if(fallos.length===0) return alert("No hay fallos");
-setQuestions(fallos);
-setCurrent(0);
-setAnswers({});
-setView("quiz");
-}}
-className="w-full bg-red-600 p-3 rounded-xl font-bold">
-Preguntas falladas ({fallos.length})
-</button>
-
-</div>
-);
-
-//////////////////////////////////////////////////////////
-// QUIZ
-//////////////////////////////////////////////////////////
-
-if(view==="quiz"){
-
-const q = questions[current];
-
-return(
-<div className="max-w-md mx-auto p-6 text-white">
-
-<button onClick={()=>setView("menu")} className="mb-4">
-← Salir
-</button>
-
-<p className="mb-4">
-Pregunta {current+1} / {questions.length}
-</p>
-
-<p className="mb-4">{q.q}</p>
-
-{q.options.map((opt,i)=>{
-
-const answered = answers[current]!=undefined;
-const correct = i===q.correct;
-const selected = i===answers[current];
-
-let style="border p-3 w-full text-left mb-2 rounded";
-
-if(answered){
-if(correct) style+=" bg-green-600";
-else if(selected) style+=" bg-red-600";
-else style+=" opacity-40";
-}
-
-return(
-<button key={i} onClick={()=>responder(i)} className={style}>
-{String.fromCharCode(65+i)}. {opt}
-</button>
-);
-
-})}
-
-{answers[current]!=undefined &&
-<div className="bg-slate-800 p-3 mt-4 rounded">
-{q.expl}
-</div>
-}
-
-<button
-onClick={()=>{
-if(current < questions.length-1) setCurrent(current+1);
-else setView("results");
-}}
-className="bg-blue-600 w-full p-3 mt-4 rounded font-bold">
-Siguiente
-</button>
-
-</div>
-);
-}
-
-//////////////////////////////////////////////////////////
-
-if(view==="results") return resultados();
-
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
-
-</script>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const MUNICIPIOS = [
+            "Cádiz Capital", "Jerez de la Frontera", "Algeciras", "San Fernando", 
+            "El Puerto de Santa María", "Chiclana", "Sanlúcar de Barrameda", "La Línea", 
+            "Puerto Real", "Arcos de la Frontera", "Rota", "Barbate"
+        ];
+
+        const App = () => {
+            const [view, setView] = useState('menu'); // menu, quiz, results, errors
+            const [test, setTest] = useState({ questions: [], current: 0, answers: {}, results: null });
+            const [errorDb, setErrorDb] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [selectedMun, setSelectedMun] = useState(MUNICIPIOS[0]);
+            const [numQ, setNumQ] = useState(25);
+
+            const apiKey = "AIzaSyBl1TDv5-OIBZGYLTCQ_v4g_oxkJPNs6eg";
+
+            // Cargar errores guardados
+            useEffect(() => {
+                const saved = localStorage.getItem('cadiz_police_errors');
+                if (saved) setErrorDb(JSON.parse(saved));
+            }, []);
+
+            const generateTest = async (isReview = false) => {
+                setLoading(true);
+                const prompt = isReview 
+                    ? `Actúa como preparador. Selecciona ${Math.min(numQ, errorDb.length)} preguntas de esta lista: ${JSON.stringify(errorDb)}. Devuelve JSON: {"questions":[...]}`
+                    : `Genera un examen oficial real (o basado fielmente en convocatorias recientes) para Policía Local de ${selectedMun}, Cádiz. 
+                       Cantidad: ${numQ} preguntas.
+                       Formato JSON: {"questions":[{"q":"pregunta","o":["A","B","C","D"],"a":0,"j":"justificación detallada con artículo"}]}
+                       Nota: 'a' es el índice 0-3.`;
+
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { responseMimeType: "application/json" }
+                        })
+                    });
+                    const data = await response.json();
+                    const result = JSON.parse(data.candidates[0].content.parts[0].text);
+                    
+                    setTest({
+                        questions: result.questions,
+                        current: 0,
+                        answers: {},
+                        results: null,
+                        municipio: isReview ? "Repaso de Errores" : selectedMun
+                    });
+                    setView('quiz');
+                } catch (e) {
+                    alert("Error al conectar con la IA. Inténtalo de nuevo.");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleAnswer = (idx) => {
+                setTest(prev => ({ ...prev, answers: { ...prev.answers, [prev.current]: idx } }));
+            };
+
+            const finalizeTest = () => {
+                let corrects = 0;
+                let fails = 0;
+                let empty = 0;
+                const failedQuestions = [];
+
+                test.questions.forEach((q, i) => {
+                    const ans = test.answers[i];
+                    if (ans === undefined) empty++;
+                    else if (ans === q.a) corrects++;
+                    else {
+                        fails++;
+                        failedQuestions.push(q);
+                    }
+                });
+
+                // Guardar fallos en la BD global
+                const newErrorDb = [...errorDb];
+                failedQuestions.forEach(fq => {
+                    if (!newErrorDb.find(e => e.q === fq.q)) newErrorDb.push(fq);
+                });
+                setErrorDb(newErrorDb);
+                localStorage.setItem('cadiz_police_errors', JSON.stringify(newErrorDb));
+
+                setTest(prev => ({ ...prev, results: { corrects, fails, empty, score: ((corrects - (fails/3)) / test.questions.length * 10).toFixed(2) } }));
+                setView('results');
+            };
+
+            const removeFromErrorDb = (index) => {
+                const updated = errorDb.filter((_, i) => i !== index);
+                setErrorDb(updated);
+                localStorage.setItem('cadiz_police_errors', JSON.stringify(updated));
+            };
+
+            if (loading) return (
+                <div className="min-h-screen flex flex-col items-center justify-center p-10 text-center">
+                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p className="font-bold text-slate-700 uppercase tracking-tighter">Cargando examen oficial de {selectedMun}...</p>
+                </div>
+            );
+
+            return (
+                <div className="max-w-xl mx-auto min-h-screen flex flex-col bg-white shadow-2xl">
+                    {/* Header */}
+                    <header className="bg-slate-900 p-6 text-white flex justify-between items-center">
+                        <div>
+                            <h1 className="text-xl font-extrabold tracking-tight">CÁDIZ<span className="text-blue-500">POL</span></h1>
+                            <p className="text-[10px] uppercase font-bold opacity-50 tracking-widest">Exámenes Municipales Reales</p>
+                        </div>
+                        {view === 'quiz' && <span className="text-xs font-black bg-blue-600 px-3 py-1 rounded-full">{test.current + 1} / {test.questions.length}</span>}
+                    </header>
+
+                    <main className="flex-1 p-5">
+                        {view === 'menu' && (
+                            <div className="space-y-6 animate-in fade-in">
+                                <section className="bg-blue-50 border border-blue-100 p-6 rounded-2xl">
+                                    <h2 className="text-sm font-black text-blue-900 uppercase mb-4 tracking-tight">Configurar Test</h2>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Municipio de Cádiz</label>
+                                            <select value={selectedMun} onChange={e => setSelectedMun(e.target.value)} className="w-full mt-1 p-3 bg-white border border-slate-200 rounded-xl font-bold text-sm outline-none focus:ring-2 ring-blue-500">
+                                                {MUNICIPIOS.map(m => <option key={m} value={m}>{m}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Número de preguntas</label>
+                                            <div className="flex gap-2 mt-1">
+                                                {[10, 25, 50, 100].map(n => (
+                                                    <button key={n} onClick={() => setNumQ(n)} className={`flex-1 py-2 rounded-lg font-black text-xs ${numQ === n ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-400'}`}>{n}</button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <button onClick={() => generateTest(false)} className="w-full py-4 bg-slate-900 text-white rounded-xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all">Iniciar Examen Oficial</button>
+                                    </div>
+                                </section>
+
+                                {errorDb.length > 0 && (
+                                    <section className="bg-red-50 border border-red-100 p-6 rounded-2xl flex justify-between items-center">
+                                        <div>
+                                            <h3 className="text-sm font-black text-red-900">BATERÍA DE ERRORES</h3>
+                                            <p className="text-[10px] font-bold text-red-600 uppercase">{errorDb.length} Preguntas pendientes</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => setView('errors')} className="p-3 bg-white text-red-600 border border-red-200 rounded-xl shadow-sm"><i className="fa-solid fa-list"></i></button>
+                                            <button onClick={() => generateTest(true)} className="p-3 bg-red-600 text-white rounded-xl shadow-lg active:scale-95 transition-all"><i className="fa-solid fa-play"></i></button>
+                                        </div>
+                                    </section>
+                                )}
+                            </div>
+                        )}
+
+                        {view === 'quiz' && (
+                            <div className="animate-in slide-in-from-bottom-4">
+                                <div className="mb-4 text-center"><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{test.municipio}</span></div>
+                                <div className="bg-slate-50 border border-slate-200 p-8 rounded-3xl mb-6 min-h-[160px] flex items-center justify-center text-center">
+                                    <p className="font-bold text-slate-800 leading-snug italic">{test.questions[test.current].q}</p>
+                                </div>
+                                <div className="space-y-3 mb-8">
+                                    {test.questions[test.current].o.map((o, i) => (
+                                        <button key={i} onClick={() => handleAnswer(i)} className={`w-full p-4 rounded-2xl text-left text-sm font-semibold border-2 transition-all flex items-start gap-4 ${test.answers[test.current] === i ? 'bg-blue-50 border-blue-600 text-blue-900' : 'bg-white border-slate-100 text-slate-600'}`}>
+                                            <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 ${test.answers[test.current] === i ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>{String.fromCharCode(65+i)}</div>
+                                            <span className="pt-0.5 leading-tight">{o}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="fixed bottom-0 left-0 right-0 p-5 bg-white/90 backdrop-blur-md flex gap-4 max-w-xl mx-auto border-t border-slate-100">
+                                    <button onClick={() => setTest(p => ({...p, current: Math.max(0, p.current-1)}))} disabled={test.current === 0} className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 disabled:opacity-30"><i className="fa-solid fa-arrow-left"></i></button>
+                                    {test.current < test.questions.length - 1 ? (
+                                        <button onClick={() => setTest(p => ({...p, current: p.current+1}))} className="flex-1 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl">Siguiente</button>
+                                    ) : (
+                                        <button onClick={finalizeTest} className="flex-1 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl animate-pulse">Finalizar Test</button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'results' && (
+                            <div className="text-center animate-in zoom-in-95">
+                                <div className={`w-24 h-24 mx-auto rounded-[2.5rem] flex items-center justify-center text-white text-5xl mb-6 shadow-2xl rotate-3 ${parseFloat(test.results.score) >= 5 ? 'bg-green-500' : 'bg-red-500'}`}><i className={`fa-solid ${parseFloat(test.results.score) >= 5 ? 'fa-medal' : 'fa-triangle-exclamation'}`}></i></div>
+                                <h2 className="text-6xl font-black text-slate-900 tracking-tighter mb-2 italic">{test.results.score}</h2>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-10 italic">Puntuación Final (Baremos Oficiales)</p>
+                                <div className="grid grid-cols-3 gap-2 mb-10">
+                                    <div className="bg-green-50 p-4 rounded-3xl border border-green-100"><p className="text-2xl font-black text-green-600">{test.results.corrects}</p><p className="text-[9px] font-bold text-green-700 uppercase">Aciertos</p></div>
+                                    <div className="bg-red-50 p-4 rounded-3xl border border-red-100"><p className="text-2xl font-black text-red-600">{test.results.fails}</p><p className="text-[9px] font-bold text-red-700 uppercase">Fallos</p></div>
+                                    <div className="bg-slate-50 p-4 rounded-3xl border border-slate-200"><p className="text-2xl font-black text-slate-400">{test.results.empty}</p><p className="text-[9px] font-bold text-slate-400 uppercase">Blancos</p></div>
+                                </div>
+                                <button onClick={() => setView('menu')} className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl">Volver al Temario</button>
+                                <div className="mt-8 space-y-4 text-left">
+                                    <h3 className="text-xs font-black uppercase text-slate-400 ml-2 italic">Revisión de respuestas</h3>
+                                    {test.questions.map((q, i) => (
+                                        <div key={i} className={`p-5 bg-white border border-slate-100 rounded-2xl shadow-sm ${test.answers[i] === q.a ? 'border-l-8 border-l-green-400' : 'border-l-8 border-l-red-400'}`}>
+                                            <p className="text-sm font-bold text-slate-800 mb-2 italic">"{q.q}"</p>
+                                            <p className="text-xs font-black text-green-600 uppercase mb-2">CORRECTA: {q.o[q.a]}</p>
+                                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px] font-medium text-slate-500 italic"><i className="fa-solid fa-gavel mr-1"></i> {q.j}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'errors' && (
+                            <div className="animate-in slide-in-from-right">
+                                <div className="flex justify-between items-center mb-10 px-2">
+                                    <h2 className="text-xl font-extrabold italic uppercase tracking-tighter">Batería de Errores</h2>
+                                    <button onClick={() => setView('menu')} className="text-[10px] font-black uppercase text-slate-400 border border-slate-200 px-4 py-2 rounded-xl">Cerrar</button>
+                                </div>
+                                <div className="space-y-4">
+                                    {errorDb.length === 0 ? (
+                                        <div className="py-20 text-center opacity-30 italic font-bold">No hay errores en tu batería histórica.</div>
+                                    ) : (
+                                        errorDb.map((err, i) => (
+                                            <div key={i} className="p-5 bg-white border border-slate-200 rounded-3xl shadow-sm relative group overflow-hidden">
+                                                <div className="absolute top-0 right-0 p-3 flex gap-2">
+                                                    <button onClick={() => removeFromErrorDb(i)} className="w-10 h-10 bg-green-100 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all"><i className="fa-solid fa-check"></i></button>
+                                                </div>
+                                                <p className="text-sm font-bold text-slate-800 mb-2 pr-12">"{err.q}"</p>
+                                                <p className="text-[11px] font-black text-green-600 uppercase mb-2 leading-tight">SOLUCIÓN: {err.o[err.a]}</p>
+                                                <p className="text-[10px] text-slate-400 font-medium italic bg-slate-50 p-2 rounded-xl border border-slate-100 leading-relaxed">{err.j}</p>
+                                                <p className="text-[9px] font-black text-slate-300 uppercase mt-4 text-right">Marcar como aprendida para eliminar</p>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
-
 
